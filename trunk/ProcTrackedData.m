@@ -73,8 +73,8 @@ end;
 % SETUP THE TRACKED AXES
 TrackLat = (0:(size(D,3)-1))*PARAMS.XSTEP*1000;
 TrackLat = TrackLat  - TrackLat(ceil(size(D,3)/2)); % mm
-TrackAx = (PPARAMS.zmax/10:size(D,2))*c/(2*fs)*1000;  % mm
-%TrackAx = (1:size(D,2))*c/(2*fs)*1000;  % mm
+%TrackAx = (PPARAMS.zmax/10:size(D,2))*c/(2*fs)*1000;  % mm
+TrackAx = (1:size(D,2))*c/(2*fs)*1000;  % mm
 
 
 if (GenFigs == 1),
