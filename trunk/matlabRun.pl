@@ -21,7 +21,7 @@ for (my $i = 0; $i <= $#ARGV; ++$i) {
     my $RunFile = "$node$ARGV[$i]"; 
     open(MATRUN,"> $RunFile.m");
     print MATRUN "arfiscans($ARGV[$i],'$cwd/');\n";
-    print MATRUN "system(\'mail -s \'$RunFile\' mlp6\@philip.egr.duke.edu < $RunFile.m\');";
+    print MATRUN "system(\'mail -s \'\'$RunFile\'\' mark.palmeri\@duke.edu < $RunFile.m\');";
     close(MATRUN);     
     system("nice -n 19 matlab -nojvm -nosplash -glnx86 < $RunFile.m > $RunFile.out 2>&1 &");
 }
