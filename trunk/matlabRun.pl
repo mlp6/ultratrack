@@ -24,4 +24,5 @@ for (my $i = 0; $i <= $#ARGV; ++$i) {
     print MATRUN "system(\'mail -s \'\'$RunFile\'\' mark.palmeri\@duke.edu < $RunFile.m\');";
     close(MATRUN);     
     system("nice -n 19 matlab -nojvm -nosplash -glnx86 < $RunFile.m > $RunFile.out 2>&1 &");
+    system("rm $RunFile.m $RunFile.out");
 }
