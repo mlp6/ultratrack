@@ -93,6 +93,9 @@ ZDISPFILE = [PATH 'zdisp.mat'];
 PPARAMS.N=45833;
 %PPARAMS.N=58500;
 
+PARAMS.field_sample_freq = 100e6; % Hz
+PARAMS.c = 1540; % sound speed (m/s)
+
 				% leave any empty to use mesh limit
 PPARAMS.xmin=[-0.25];PPARAMS.xmax=[0];		% out-of-plane,cm
 % single line data
@@ -207,6 +210,7 @@ if (TRACKPARAMS.TRACK==2),
 	disp('GFP Tracking code not integrated yet! Sorry!');
 	end;
                                                                                 
+% save res_tracksim.mat (same format as experimental res*.mat files)
 % save
 save(TRACK_FILE,'D','C','PARAMS','TRACKPARAMS','PPARAMS','DYN_FILE','ZDISPFILE','RF_FILE','PHANTOM_FILE')
 

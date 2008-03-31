@@ -66,7 +66,10 @@ TXOFFSET = PARAMS.TXOFFSET; % Lateral offset of Rx beam from Tx beam (m)
 
 % Create probe structure for specified probe
 probe=uf_txt_to_probe(PROBE_NAME);
-probe.field_sample_freq=100e6;
+%probe.field_sample_freq=100e6;
+% this was hard-coded, but that was silly - now defined in arfi_scans.m
+probe.field_sample_freq=PARAMS.field_sample_freq;
+probe.c = PARAMS.c;
 probe.txoffset = TXOFFSET;
 
 % Make transmit and receive apertures as defined by probe
