@@ -1,6 +1,6 @@
-function varargout=mkphantomfromdyna2(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
+function varargout=mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
 %
-% mkphantomfromdyna2(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
+% mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
 %
 % Function for reading .dyn and zdisp files and generating displaced 
 % scatterers for Field.  Function saves phantom structures compatible 
@@ -41,6 +41,10 @@ function varargout=mkphantomfromdyna2(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
 %
 % 11/11/2004 Stephen McAleavey, U. Rochester BME
 % revised 11/17/04
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% brought function name into agreement with its actual filename
+% Mark 03/31/08
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
