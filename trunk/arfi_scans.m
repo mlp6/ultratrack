@@ -74,8 +74,7 @@ function []=arfi_scans(Smark,PATH)
 addpath('/home/mlp6/matlab/URI_FIELD/code');
 addpath('/home/mlp6/matlab/URI_FIELD/code/probes');
 
-% SHOULD NEW PHANTOM FILES BE GENERATED
-% SHOULD RF SCANS BE GENERATED
+% SHOULD NEW PHANTOM FILES BE GENERATED; SHOULD RF SCANS BE GENERATED
 % BOOLEAN: 0 - no, 1 - yes
 GENERATE_PHANTOM = 1;
 GENERATE_RF = 1;
@@ -137,8 +136,10 @@ PARAMS.RX_GROW_APERTURE=1;      %
 % lateral offset of the Tx beam from the Rx beam (m)
 PARAMS.TXOFFSET = 0;				
 
-% PARAMETERS FOR TRACKING
-TRACKPARAMS.TRACK=1;		%1==samtrack, 2==gfptrack
+% TRACKING ALGORITHM TO USE
+% 'samtrack','samauto','ncorr','loupas'
+TRACKPARAMS.TRACK='samtrack';
+TRACKPARAMS.KERNELSIZE = 35; % samples
 
 % MAKE PHANTOMS
 P=rmfield(PPARAMS,'TIMESTEP');
@@ -180,38 +181,16 @@ end;
 % load all RF into a big matrix
 n=1;
 while ~isempty(dir(sprintf('%s%03d.mat',RF_FILE,n)))
-        load(sprintf('%s%03d.mat',RF_FILE,n));
-	% some rf*.mat files are off by one axial index;
-	% allowing for some dynamic assignment of bigRF matrix
-        % bigRF(:,:,n)=rf;
-        bigRF(1:size(rf,1),:,n)=rf;
-        n=n+1
-        end;
-                                                                                
-% sam_track or gianmarco track it
-if (TRACKPARAMS.TRACK==1),
-  % sam_track all lines
-  for n=1:size(bigRF,2)
-    % MODIFIED THE CODE TO HAVE A VARIABLE KERNEL
-    % SIZE AS A FUNCTION OF FREQUENCY TO MAINTAIN A
-    % CONSTANT 2.5 CYCLES / KERNEL
-    % MARK 01/24/05
-    %[D(:,:,n),C(:,:,n)]=sam_track(squeeze(bigRF(:,n,:)),35,-5,5);
-		%
-		% Allow for variable kernel sizes
-		%
-    %[D(:,:,n),C(:,:,n)]=sam_track(squeeze(bigRF(:,n,:)),35*7/Freq,-5,5);
-    [D(:,:,n),C(:,:,n)]=sam_track(squeeze(bigRF(:,n,:)),KernelSize*7/Freq,-5,5);
-  end;
+    load(sprintf('%s%03d.mat',RF_FILE,n));
+    % some rf*.mat files are off by one axial index; allowing for some dynamic
+    % assignment of bigRF matrix
+    % bigRF(:,:,n)=rf;
+    bigRF(1:size(rf,1),:,n)=rf;
+    n=n+1
 end;
-
-if (TRACKPARAMS.TRACK==2),
-	% use gfp's tracker
-	disp('GFP Tracking code not integrated yet! Sorry!');
-	end;
+                                                                                
+% track the displacements
+[D,C]=estimate_disp(bigRF,TRACKPARAMS.TRACK,TRACKPARAMS.KERNELSIZE);
                                                                                 
 % save res_tracksim.mat (same format as experimental res*.mat files)
-% save
-save(TRACK_FILE,'D','C','PARAMS','TRACKPARAMS','PPARAMS','DYN_FILE','ZDISPFILE','RF_FILE','PHANTOM_FILE')
-
-% DONE!
+createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,ZDISPFILE,DYN_FILE);
