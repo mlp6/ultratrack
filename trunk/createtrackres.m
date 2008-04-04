@@ -1,5 +1,5 @@
-function []=createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,ZDISPFILE,DYN_FILE);
-% function []=createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,ZDISPFILE,DYN_FILE);
+function []=createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,ZDISPFILE,DYN_FILE,TRACK_DIR);
+% function []=createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,ZDISPFILE,DYN_FILE,TRACK_DIR);
 % Create res_tracksim.mat that shares the same format as the res_sim.mat and
 % res*.mat experimental files.
 %
@@ -9,7 +9,7 @@ function []=createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,Z
 % make this code backwards compatible for when these two constants were not
 % passed along in the PARAMS structure
 % SAMPLING FREQUENCY (Hz) OF THE D & C MATRICES
-if(~isfield(PARAMS,'field_sample_freq'),
+if(isfield(PARAMS,'field_sample_freq')),
     fs = PARAMS.field_sample_freq;
 else,
     warning('The Field II sampling frequency cannot be found; assuming it was 100 MHz.');
@@ -17,7 +17,7 @@ else,
 end;
 
 % SOUND SPEED (m/s)
-if(~isfield(PARAMS,'c'),
+if(isfield(PARAMS,'c')),
     c = PARAMS.c;
 else,
     warning('The Field II sound speed cannot be found; assuming it was 1540 m/s');
@@ -46,21 +46,21 @@ cc_coeff = permute(D,[2,1,3]);
 % internally w/i this body of code since only time step indices are used...
 % grrrr.  we'll have to rely on the time variable that is saved from the pure
 % FEM data as parsed by the PPARAMS.TIMESTEP variable defined in arfi_scans.m
-if(exist('../../res_sim.mat','file')==2),
-    resSim=load('../../res_sim.mat');
+if(exist('res_sim.mat','file')==2),
+    resSim=load('res_sim.mat');
 else,
     error('We have a problem; res_sim.mat does not exist in the CWD, so the time variable cannot be defined.');
 end;
 
 if(~isempty(PPARAMS.TIMESTEP)),
-    t = resSim.t(PARAMS.TIMESTEP); % s
+    t = resSim.t(PPARAMS.TIMESTEP); % s
 else,
     t = resSim.t; % s
+    if(length(t) ~= size(arfidata,3)),
+        error('Mismatched time dimension');
+    end;
 end;
 
-if(length(t) ~= size(arfidata,3)),
-    error('Mismatched time dimension');
-end;
 
 % check to make sure that we aren't clobbering a result file that we make not
 % want to clobber!
@@ -69,4 +69,4 @@ if(exist('res_tracksim.mat','file')==2),
     system('mv res_tracksim.mat res_tracksim.mat.old');
 end;
 
-save res_tracksim.mat arfidata lat axial t cc_coeff
+save([TRACK_DIR 'res_tracksim.mat'],'arfidata','lat','axial','t','cc_coeff');
