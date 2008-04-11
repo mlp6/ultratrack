@@ -39,8 +39,8 @@ end;
 % the axial axis "should" always start at 0
 axial = (0:(size(D,2)-1))*c/(2*fs)*1000;  % mm
 
-arfidata = permute(C,[2,3,1]);
-cc_coeff = permute(D,[2,3,1]);
+arfidata = permute(D,[2,3,1]);
+cc_coeff = permute(C,[2,3,1]);
 
 % now we need to somehow define the time variable... and this is not easy
 % internally w/i this body of code since only time step indices are used...
@@ -57,8 +57,6 @@ if(~isempty(PPARAMS.TIMESTEP)),
 else,
     t = resSim.t; % s
     if((length(t)-1) ~= size(arfidata,3)),
-        disp(length(t));
-        disp(size(arfidata));
         error('Mismatched time dimension');
     end;
 end;
