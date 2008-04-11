@@ -25,8 +25,11 @@ else,
 end;
 
 % convert time shifts to displacements (microns)
+% the first time step is the reference one that isn't included in D, so
+% it is manually added here to sync with the time (t) variable
+TrackedDisp(1,:,:) = zeros(size(D,2),size(D,3));
 for t = 1:size(D,1),
-    TrackedDisp(t,:,:) = -D(t,:,:)*c*1e6/(2*fs);  % microns
+    TrackedDisp(t+1,:,:) = -D(t,:,:)*c*1e6/(2*fs);  % microns
 end;
 
 % setup the spatial axes
@@ -55,7 +58,7 @@ if(~isempty(PPARAMS.TIMESTEP)),
     t = resSim.t(PPARAMS.TIMESTEP); % s
 else,
     t = resSim.t; % s
-    if((length(t)-1) ~= size(arfidata,3)),
+    if(length(t) ~= size(arfidata,3)),
         error('Mismatched time dimension');
     end;
 end;
