@@ -27,7 +27,7 @@ end;
 % CONVERT THE D MATRIX FROM FIELD SAMPLES TO DISPLACEMENT IN
 % MICRONS, AND MAKE TIME THE THIRD DIMENSION
 for t = 1:size(D,1),
-    TrackedDisp(:,:,t) = -D(t,:,:)*c*1e6/(2*fs);  % microns
+    TrackedDisp(:,:,t) = D(t,:,:)*c*1e6/(2*fs);  % microns
 end;
 
 % setup the spatial axes
