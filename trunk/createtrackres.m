@@ -21,13 +21,12 @@ if(isfield(PARAMS,'c')),
     c = PARAMS.c;
 else,
     warning('The Field II sound speed cannot be found; assuming it was 1540 m/s');
-    c = 1540;
+    c = 1540; % m/s
 end;
 
-% CONVERT THE D MATRIX FROM FIELD SAMPLES TO DISPLACEMENT IN
-% MICRONS, AND MAKE TIME THE THIRD DIMENSION
+% convert time shifts to displacements (microns)
 for t = 1:size(D,1),
-    TrackedDisp(:,:,t) = D(t,:,:)*c*1e6/(2*fs);  % microns
+    TrackedDisp(t,:,:) = -D(t,:,:)*c*1e6/(2*fs);  % microns
 end;
 
 % setup the spatial axes
@@ -39,7 +38,7 @@ end;
 % the axial axis "should" always start at 0
 axial = (0:(size(D,2)-1))*c/(2*fs)*1000;  % mm
 
-arfidata = permute(D,[2,3,1]);
+arfidata = permute(TrackedDisp,[2,3,1]);
 cc_coeff = permute(C,[2,3,1]);
 
 % now we need to somehow define the time variable... and this is not easy
@@ -70,3 +69,4 @@ if(exist('res_tracksim.mat','file')==2),
 end;
 
 save([TRACK_DIR 'res_tracksim.mat'],'arfidata','lat','axial','t','cc_coeff');
+disp('res_tracksim.mat created');
