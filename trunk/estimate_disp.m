@@ -23,6 +23,7 @@ function [D,C]=estimate_disp(rfdata,alg,kernelsize)
 
 switch alg
     case 'samtrack',
+        disp('Displacement tracking algorithm: samtrack');
         for n=1:size(rfdata,2)
         % MODIFIED THE CODE TO HAVE A VARIABLE KERNEL
         % SIZE AS A FUNCTION OF FREQUENCY TO MAINTAIN A
@@ -33,7 +34,6 @@ switch alg
                     % Allow for variable kernel sizes
                     %
         %[D(:,:,n),C(:,:,n)]=sam_track(squeeze(bigRF(:,n,:)),35*7/Freq,-5,5);
-        disp('Displacement tracking algorithm: sam_track');
         [D(:,:,n),C(:,:,n)]=sam_track(squeeze(rfdata(:,n,:)),kernelsize,-5,5);
         end;
 
