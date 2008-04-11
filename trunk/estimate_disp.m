@@ -33,6 +33,7 @@ switch alg
                     % Allow for variable kernel sizes
                     %
         %[D(:,:,n),C(:,:,n)]=sam_track(squeeze(bigRF(:,n,:)),35*7/Freq,-5,5);
+        disp('Displacement tracking algorithm: sam_track');
         [D(:,:,n),C(:,:,n)]=sam_track(squeeze(rfdata(:,n,:)),kernelsize,-5,5);
         end;
 
