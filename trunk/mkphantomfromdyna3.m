@@ -82,19 +82,41 @@ scatterers(:,3)=scatterers(:,3)*(PPARAMS.zmax-PPARAMS.zmin)+PPARAMS.zmin;
 % NEW ON 12/01/04: Add rigid displacement to scatterers before shift
 scatterers=scatterers+ones(PPARAMS.N,1)*PPARAMS.delta;
 
+% MODIFIED to now read in individual time steps from a binary dat file instead
+% of reading all time steps in at once (and using up excessive amounts of RAM).
+% Old zdisp.mat files can be converted using convert_zdisp_dat.m .
+%
 % Load zdisp file;
-disp('Loading zdisp...');
-load(ZDISPFILE);
+%disp('Loading zdisp...');
+%load(ZDISPFILE);
+%
+if(exist(ZDISPFILE,'file') == 0),
+    error(sprintf('%s does not exist.  Make sure that zdisp.mat files are converted to zdisp.dat .',ZDISPFILE));
+end;
+zdisp_fid = fopen(ZDISPFILE,'r');
+
+NUM_NODES = fread(zdisp_fid,1,'float32');
+NUM_DIMS = fread(zdisp_fid,1,'float32');
+NUM_TIMESTEPS = fread(zdisp_fid,1,'float32');
 
 % Decide on timesteps to use
-if isempty(PPARAMS.TIMESTEP), PPARAMS.TIMESTEP=1:size(zdisp,3); end;
+%if isempty(PPARAMS.TIMESTEP), PPARAMS.TIMESTEP=1:size(zdisp,3); end;
+if isempty(PPARAMS.TIMESTEP), PPARAMS.TIMESTEP=1:NUM_TIMESTEPS; end;
 
 % Generate displaced scatterers for each timestep
 for t=PPARAMS.TIMESTEP,
 
 	% Get the displacement matricies
 	disp(sprintf('Extracting displacements for timestep %d...',t));
-	[dX,dY,dZ]=reform_zdisp_slice(zdisp(:,:,t),nodes);
+
+        % extract the zdisp values for the appropriate time step
+        fseek(zdisp_fid,3*4+NUM_NODES*NUM_DIMS*(t-1)*4,-1);
+        zdisp_slice = fread(zdisp_fid,NUM_NODES*NUM_DIMS,'float32');
+        zdisp_slice = double(reshape(zdisp_slice,NUM_NODES,NUM_DIMS));
+
+	%[dX,dY,dZ]=reform_zdisp_slice(zdisp(:,:,t),nodes);
+	[dX,dY,dZ]=reform_zdisp_slice(zdisp_slice,nodes);
+        clear zdisp_slice
 
 	% Interpolate displacement values
         sdX=interpn(X,Y,Z,dX,scatterers(:,1),scatterers(:,2),...
@@ -122,7 +144,9 @@ for t=PPARAMS.TIMESTEP,
 
 	% Save phantom to file
         save(sprintf('%s%03d',OUTPUT_NAME,t), 'phantom')
-	end;
+end;
+
+fclose(zdisp_fid);
 
 % NEW on 12/01/04: If an output argument is supplied/requested, 
 % output PPARAMS to it.
