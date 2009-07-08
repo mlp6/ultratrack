@@ -1,22 +1,27 @@
-function []=arfi_scans(phantom_seed,PATH)
-% function []=arfi_scans(phantom_seed,PATH)
+function []=arfi_scans(phantom_seed)
+% function []=arfi_scans(phantom_seed)
 % INPUTS:	
 %   phantom_seed (int) - scatterer position RNG seed
-%   PATH (string) - root level simulation directory path
 % OUTPUTS:	
 %   Nothing returned, but lots of files and directories created in PATH
 % 
 % Mark 04/11/08
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Removed PATH as a function input for SGE array job compatibility.
+%
+% Mark Palmeri (mark.palmeri@duke.edu)
+% 2009-01-04
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % PATH TO URI/FIELD/TRACKING FILES:
-addpath('/home/mlp6/ultratrack/trunk/URI_FIELD/code');
-addpath('/home/mlp6/ultratrack/trunk/URI_FIELD/code/probes');
-addpath('/home/mlp6/arfi_code/sam/trunk/');
+addpath('/krnlab/mlp6/ultratrack/trunk/URI_FIELD/code');
+addpath('/krnlab/mlp6/ultratrack/trunk/URI_FIELD/code/probes');
+addpath('/krnlab/mlp6/arfi_code/sam/trunk/');
 
 % PARAMETERS FOR PHANTOM CREATION
 % file containing comma-delimited node data
 DYN_FILE='/nefs/mlp6/LiverFEM/ph41mesh/ph41nodes.dyn'
-DEST_DIR = PATH;
+DEST_DIR = pwd;
 ZDISPFILE = [PATH 'zdisp.mat'];
 
 % number of seeds to populate the phantom volume
