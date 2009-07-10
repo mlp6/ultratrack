@@ -66,7 +66,10 @@ PARAMS.TXOFFSET = 0;
 % TRACKING ALGORITHM TO USE
 % 'samtrack','samauto','ncorr','loupas'
 TRACKPARAMS.TRACK_ALG='samtrack';
-TRACKPARAMS.KERNEL_SAMPLES = 85; % samples
+TRACKPARAMS.WAVELENGTHS = 1.5; % size of tracking kernel in wavelengths
+%TRACKPARAMS.KERNEL_SAMPLES = 85; % samples
+TRACKPARAMS.KERNEL_SAMPLES = round((PARAMS.field_sample_freq/PARAMS.TX_FREQ)*TRACK.WAVELENGTHS);
+
 
 % MAKE PHANTOMS
 P=rmfield(PPARAMS,'TIMESTEP');
@@ -99,7 +102,8 @@ while ~isempty(dir(sprintf('%s%03d.mat',RF_FILE,n)))
 end;
                                                                                 
 % track the displacements
-[D,C]=estimate_disp(bigRF,TRACKPARAMS.TRACK_ALG,TRACKPARAMS.KERNEL_SAMPLES);
+%[D,C]=estimate_disp(bigRF,TRACKPARAMS.TRACK_ALG,TRACKPARAMS.KERNEL_SAMPLES);
+[D,C]=estimate_disp(bigRF,TRACKPARAMS);
                                                                                 
 % save res_tracksim.mat (same format as experimental res*.mat files)
 track_save_path = pwd;
