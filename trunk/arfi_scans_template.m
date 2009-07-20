@@ -1,10 +1,15 @@
-function []=arfi_scans(phantom_seed)
-% function []=arfi_scans(phantom_seed)
+function []=arfi_scans_template(phantom_seed)
+% function []=arfi_scans_template(phantom_seed)
 % INPUTS:	
 %   phantom_seed (int) - scatterer position RNG seed
 % OUTPUTS:	
 %   Nothing returned, but lots of files and directories created in PATH
-% 
+  
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MODIFICATION HISTORY
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Original script
 % Mark 04/11/08
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Removed PATH as a function input for SGE array job compatibility.
@@ -12,21 +17,29 @@ function []=arfi_scans(phantom_seed)
 % Mark Palmeri (mark.palmeri@duke.edu)
 % 2009-01-04
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2009-09-20 (mlp6)
+%
+% (1) Compute absolute number of scatterers needed from a defined scatterer
+% density to achieve fully developed speckle.
+%
+% (2) Changed zdisp.mat -> zdisp.dat.
+%
+% (3) Corrected path definitions.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % PATH TO URI/FIELD/TRACKING FILES:
-addpath('/krnlab/mlp6/ultratrack/trunk/URI_FIELD/code');
-addpath('/krnlab/mlp6/ultratrack/trunk/URI_FIELD/code/probes');
+ULTRATRACK_PATH = '/krnlab/mlp6/ultratrack/trunk';
+addpath(ULTRATRACK_PATH)
+addpath([ULTRATRACK_PATH '/URI_FIELD/code']);
+addpath([ULTRATRACK_PATH '/URI_FIELD/code/probes']);
 addpath('/krnlab/mlp6/arfi_code/sam/trunk/');
 
 % PARAMETERS FOR PHANTOM CREATION
 % file containing comma-delimited node data
-DYN_FILE='/nefs/mlp6/LiverFEM/ph41mesh/ph41nodes.dyn'
-DEST_DIR = pwd;
-ZDISPFILE = [PATH 'zdisp.mat'];
-
-% number of seeds to populate the phantom volume
-% this should be defined as a density, but for now you have to figure it out
-PPARAMS.N=20000;
+DYN_FILE='/path/to/nodes.dyn'
+DEST_DIR = pwd; DEST_DIR = [DEST_DIR '/'];
+ZDISPFILE = [DEST_DIR 'zdisp.dat'];
 
 % setup some Field II parameters
 PARAMS.field_sample_freq = 100e6; % Hz
@@ -39,6 +52,11 @@ PPARAMS.ymin=[0];PPARAMS.ymax=[0.3];	% lateral, cm \
 PPARAMS.zmin=[-7.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!	
 PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
                         % simulate all timesteps
+
+% compute number of scatteres to use
+SCATTERER_DENSITY = 27610; % scatterers/cm^3
+TRACKING_VOLUME = (PPARAMS.xmax-PPARAMS.xmin)*(PPARAMS.ymax-PPARAMS.ymin)*(PPARAMS.zmax-PPARAMS.zmin); % cm^3
+PPARAMS.N = round(SCATTERER_DENSITY * TRACKING_VOLUME); % number of scatterers to randomly distribute over the tracking volume
 
 PPARAMS.seed=phantom_seed;         % RNG seed
 
@@ -68,7 +86,7 @@ PARAMS.TXOFFSET = 0;
 TRACKPARAMS.TRACK_ALG='samtrack';
 TRACKPARAMS.WAVELENGTHS = 1.5; % size of tracking kernel in wavelengths
 %TRACKPARAMS.KERNEL_SAMPLES = 85; % samples
-TRACKPARAMS.KERNEL_SAMPLES = round((PARAMS.field_sample_freq/PARAMS.TX_FREQ)*TRACK.WAVELENGTHS);
+TRACKPARAMS.KERNEL_SAMPLES = round((PARAMS.field_sample_freq/PARAMS.TX_FREQ)*TRACKPARAMS.WAVELENGTHS);
 
 
 % MAKE PHANTOMS
