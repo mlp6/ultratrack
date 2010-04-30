@@ -29,7 +29,7 @@ function []=arfi_scans_template(phantom_seed)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % PATH TO URI/FIELD/TRACKING FILES:
-ULTRATRACK_PATH = '/krnlab/mlp6/ultratrack/2.2.0';
+ULTRATRACK_PATH = '/krnlab/mlp6/ultratrack/2.3.0';
 addpath(ULTRATRACK_PATH)
 addpath([ULTRATRACK_PATH '/URI_FIELD/code']);
 addpath([ULTRATRACK_PATH '/URI_FIELD/code/probes']);
@@ -39,7 +39,7 @@ addpath('/krnlab/mlp6/arfi_code/sam/trunk/');
 % file containing comma-delimited node data
 DYN_FILE='/path/to/nodes.dyn'
 DEST_DIR = pwd; DEST_DIR = [DEST_DIR '/'];
-ZDISPFILE = [DEST_DIR 'zdisp.dat'];
+ZDISPFILE = [DEST_DIR 'disp.dat'];
 
 % setup some Field II parameters
 PARAMS.field_sample_freq = 100e6; % Hz
