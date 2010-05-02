@@ -1,0 +1,16 @@
+How to run a tracking simulation...
+
+All of this code exists in the 'ultratrack' svn respository.
+
+* A template driver script exists in the repository (arfi_scans_template.m); copy
+it to the directory with the FEM results that you're interested in tracking.
+
+* Edit most of the first half of the template script to:
+    (1) Link to appropriate paths if they need to be changed,
+    (2) Setup the appropriate tracking configuration.
+
+* The driver script can be launched from the command line as an input to
+* matlab.  This is ammenable to execution via SGE, where the script inputs can
+* be populated as different tasks.
+
+Mark 2010-02-05
