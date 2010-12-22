@@ -1,2 +1,4 @@
 * Updated arfi_scans_template to accomodate individual time steps; this also
   involves modification to do_dyna_scans.m
+
+* Reduced STOUT for reduce_scats.m

@@ -44,6 +44,10 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS,timesteps);
 % 2009-09-26
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % added timesteps input for multi-CPU / SGE usage
+%
+% corrected saving output for rfdata to be based on the timestep, not the
+% iteration of phantom file processed
+%
 % Mark (2010-12-22)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -119,10 +123,9 @@ if isempty(phantom_files),
     error('No phantom files found matching name given');
 end;
 
-
 for n=1:length(phantom_files), % For each file,
 	tstep=sscanf(phantom_files(n).name,[phantom_name '%03d']);
-	if(isempty(tstep) || isempty(find(timesteps == tstep))),
+	if(isempty(tstep) || (isempty(find(timesteps == tstep)) & ~isempty(timesteps))),
 		warning(['Skipping ' phantom_files(n).name]);
 	else
 		% Load the phantom
@@ -149,7 +152,7 @@ for n=1:length(phantom_files), % For each file,
                 t0 = single(t0);
 
 		% Save the result
-		save(sprintf('%s%03d',OUTPUT_FILE,n),'rf','t0');
+		save(sprintf('%s%03d',OUTPUT_FILE,tstep),'rf','t0');
 
 	end; % matches if isempty(tstep)
 end; % matches for n loop
