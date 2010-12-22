@@ -1,5 +1,5 @@
-function []=arfi_scans_template(phantom_seed,timesteps)
-% function []=arfi_scans_template(phantom_seed,timesteps)
+function []=arfi_scans_template(phantom_seed,timesteps,mode)
+% function []=arfi_scans_template(phantom_seed,timesteps,mode)
 % INPUTS:	
 %   phantom_seed (int) - scatterer position RNG seed
 %   timesteps (ints or []) - vector of timesteps to run; an empty vector will
@@ -29,6 +29,12 @@ function []=arfi_scans_template(phantom_seed,timesteps)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Added timesteps input to spread over multiple CPUs / SGE
 % Added check for directory existence
+% Added mode input:
+%   phantom - just create phantoms
+%   rf - just create phantoms and rf data 
+%   track - track rf data
+%   all - create phantoms, create rf data and track rf data
+%   Note - it is up to the user to make sure all necessary data exists
 %
 % Mark (2010-12-22)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -39,6 +45,7 @@ addpath(ULTRATRACK_PATH)
 addpath([ULTRATRACK_PATH '/URI_FIELD/code']);
 addpath([ULTRATRACK_PATH '/URI_FIELD/code/probes']);
 addpath('/krnlab/mlp6/arfi_code/sam/trunk/');
+addpath('/home/mlp6/matlab/Field_II_7.8/');
 
 % PARAMETERS FOR PHANTOM CREATION
 % file containing comma-delimited node data
@@ -100,7 +107,9 @@ if ~exist(PHANTOM_DIR,'dir'),
     unix(sprintf('mkdir %s',PHANTOM_DIR));
 end;
 PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
-mkphantomfromdyna3(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
+if(strcmp(mode,'phantom') || strcmp(mode,'rf') || strcmp(mode,'all')),
+    mkphantomfromdyna3(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
+end;
 
 % SCAN PHANTOMS
 RF_DIR=[make_file_name([PHANTOM_DIR 'rf'],PARAMS) '/'];
@@ -108,31 +117,35 @@ if ~exist(RF_DIR,'dir'),
     unix(sprintf('mkdir %s',RF_DIR));
 end;
 RF_FILE=[RF_DIR 'rf'];
-field_init(-1);
-do_dyna_scans(PHANTOM_FILE,RF_FILE,PARAMS,timesteps);
-field_end;
+if(strcmp(mode,'rf') || strcmp(mode,'all')),
+    field_init(-1);
+    do_dyna_scans(PHANTOM_FILE,RF_FILE,PARAMS,timesteps);
+    field_end;
+end;
 
 % TRACK RF
-TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];
-if ~exist(TRACK_DIR,'dir'),
-    unix(sprintf('mkdir %s',TRACK_DIR));
-end;
+if(strcmp(mode,'track') || strcmp(mode,'all')),
+    TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];
+    if ~exist(TRACK_DIR,'dir'),
+        unix(sprintf('mkdir %s',TRACK_DIR));
+    end;
 
-% load all RF into a big matrix
-n=1;
-while ~isempty(dir(sprintf('%s%03d.mat',RF_FILE,n)))
-    load(sprintf('%s%03d.mat',RF_FILE,n));
-    % some rf*.mat files are off by one axial index; allowing for some dynamic
-    % assignment of bigRF matrix
-    % bigRF(:,:,n)=rf;
-    bigRF(1:size(rf,1),:,n)=rf;
-    n=n+1;
+    % load all RF into a big matrix
+    n=1;
+    while ~isempty(dir(sprintf('%s%03d.mat',RF_FILE,n)))
+        load(sprintf('%s%03d.mat',RF_FILE,n));
+        % some rf*.mat files are off by one axial index; allowing for some dynamic
+        % assignment of bigRF matrix
+        % bigRF(:,:,n)=rf;
+        bigRF(1:size(rf,1),:,n)=rf;
+        n=n+1;
+    end;
+                                                                                    
+    % track the displacements
+    %[D,C]=estimate_disp(bigRF,TRACKPARAMS.TRACK_ALG,TRACKPARAMS.KERNEL_SAMPLES);
+    [D,C]=estimate_disp(bigRF,TRACKPARAMS);
+                                                                                    
+    % save res_tracksim.mat (same format as experimental res*.mat files)
+    track_save_path = pwd;
+    createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,ZDISPFILE,DYN_FILE,TRACK_DIR);
 end;
-                                                                                
-% track the displacements
-%[D,C]=estimate_disp(bigRF,TRACKPARAMS.TRACK_ALG,TRACKPARAMS.KERNEL_SAMPLES);
-[D,C]=estimate_disp(bigRF,TRACKPARAMS);
-                                                                                
-% save res_tracksim.mat (same format as experimental res*.mat files)
-track_save_path = pwd;
-createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,ZDISPFILE,DYN_FILE,TRACK_DIR);
