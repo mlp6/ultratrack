@@ -2,3 +2,7 @@
   involves modification to do_dyna_scans.m
 
 * Reduced STOUT for reduce_scats.m
+
+* Modified phantom generation script to set NaN values for sdX, sdY, and sdZ
+* values to be 0 to work w/ Field II.  The NaNs were from out-of-range
+* positions in the tri-linear interpolator.

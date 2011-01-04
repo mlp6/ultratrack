@@ -49,6 +49,9 @@ function varargout=mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
 % Mark Palmeri (mark.palmeri@duke.edu)
 % 2009-09-26
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set out-of-range (NaN) values from tri-linear interp functions to be 0
+% Mark (2011-01-02)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -129,6 +132,10 @@ for t=PPARAMS.TIMESTEP,
 	sdZ=interpn(X,Y,Z,dZ,scatterers(:,1),scatterers(:,2),...
 		scatterers(:,3),'linear');
 
+        % Replace NaN (out-of-range) values from interpn functions as 0
+        sdX(isnan(sdX)) = 0;
+        sdY(isnan(sdY)) = 0;
+        sdZ(isnan(sdZ)) = 0;
 
 	% Add displacements to initial scatterer positions
 	% and insert the values in the phantom structure
