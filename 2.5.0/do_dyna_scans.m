@@ -59,6 +59,10 @@ RX_F_NUM=PARAMS.RX_F_NUM;	% Receive aperture f number
 RX_GROW_APERTURE=PARAMS.RX_GROW_APERTURE;	  % 1=grow, 0 = static 
 TXOFFSET = PARAMS.TXOFFSET; % Lateral offset of Rx beam from Tx beam (m)
 
+% enabled matrix array elements (only for 2D matrix arrays!)
+% 2D matrix of 0s (off) and 1s (on) that is no_ele_x x no_ele_y in dimension
+ENABLED = 
+
 % END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 

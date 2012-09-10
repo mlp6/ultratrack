@@ -1,5 +1,5 @@
-function []=arfi_scans_template(phantom_seed)
-% function []=arfi_scans_template(phantom_seed)
+function []=sphere_scans(phantom_seed)
+% function []=sphere_scans(phantom_seed)
 % INPUTS:	
 %   phantom_seed (int) - scatterer position RNG seed
 % OUTPUTS:	
@@ -27,24 +27,18 @@ function []=arfi_scans_template(phantom_seed)
 % (3) Corrected path definitions.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v2.5.0
-% * added PARAMS.TX_FNUM_Y and PARAMS.RX_FNUM_Y for defining the 'enabled'
-%   matrix for xdc_2d_array probes; these parameters only have to be defined
-%   for the matrix probe type (currently, only the 4z1c)!!
-% Mark Palmeri (mlp6@duke.edu)
-% 2012-09-04
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+TRACK_ONLY = 1; % set to 0 for a full sim
 
 % PATH TO URI/FIELD/TRACKING FILES:
 ULTRATRACK_PATH = '/krnlab/mlp6/ultratrack/2.5.0';
 addpath(ULTRATRACK_PATH)
 addpath([ULTRATRACK_PATH '/URI_FIELD/code']);
 addpath([ULTRATRACK_PATH '/URI_FIELD/code/probes']);
-addpath('/krnlab/mlp6/arfi_code/sam/trunk/');
 
 % PARAMETERS FOR PHANTOM CREATION
 % file containing comma-delimited node data
-DYN_FILE='/path/to/nodes.dyn'
+DYN_FILE='/krnlab/CIRSphantoms/fem/mesh/sphere2cm/nodes.dyn'
 DEST_DIR = pwd; DEST_DIR = [DEST_DIR '/'];
 ZDISPFILE = [DEST_DIR 'disp.dat'];
 
@@ -54,9 +48,9 @@ PARAMS.c = 1540; % sound speed (m/s)
 
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
-PPARAMS.xmin=[-0.35];PPARAMS.xmax=[0];	% out-of-plane,cm
-PPARAMS.ymin=[0];PPARAMS.ymax=[0.3];	% lateral, cm \
-PPARAMS.zmin=[-7.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!	
+PPARAMS.xmin=[-0.15];PPARAMS.xmax=[0];	% out-of-plane,cm
+PPARAMS.ymin=[-0.4];PPARAMS.ymax=[3.4];	% lateral, cm \
+PPARAMS.zmin=[-8.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!	
 PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
                         % simulate all timesteps
 
@@ -72,20 +66,17 @@ PPARAMS.delta=[0 0 0]   % rigid pre-zdisp-displacement scatterer translation,
                         % sequences
 
 % PARAMETERS FOR SCANNING (PARAMS)
-PARAMS.PROBE_NAME='ph4-1.txt';
-PARAMS.XMIN=0;		    % Leftmost scan line (m)
-PARAMS.XSTEP=0.2e-3;	    % Scanline spacing (m)
-PARAMS.XMAX=0.4e-3;	    % Rightmost scan line (m)
-PARAMS.TX_FOCUS=3.75e-2;    % Tramsmit focus depth (m)
-PARAMS.TX_F_NUM=2;          % Transmit f number 
-PARAMS.TX_F_NUM_Y=2;        % Transmit f-number in the elevation dimension
-                            % (only needed for 2D matrix arrays!)
+PARAMS.PROBE_NAME='ch4-1.txt';
+PARAMS.XMIN=0;              % Leftmost scan line (m)
+PARAMS.XSTEP=0.2e-3;        % Scanline spacing (m)
+PARAMS.XMAX=30.0e-3;         % Rightmost scan line (m)
+PARAMS.TX_FOCUS=10.0e-2;    % Tramsmit focus depth (m)
+PARAMS.TX_F_NUM=3;          % Transmit f number 
 PARAMS.TX_FREQ=3.08e6;      % Transmit frequency (Hz)
 PARAMS.TX_NUM_CYCLES=2;     % Number of cycles in transmit toneburst
 PARAMS.RX_FOCUS=0;          % Depth of receive focus - use 0 for dyn. foc
 PARAMS.RX_F_NUM=0.5;        % Receive aperture f number
-PARAMS.RX_F_NUM_Y=0.5;      % Receive aperture f-number (only needed for 2D matrix arrays)
-PARAMS.RX_GROW_APERTURE=1;  
+PARAMS.RX_GROW_APERTURE=1;
 
 % lateral offset of the Tx beam from the Rx beam (m) to simulated prll rx
 % tracking
@@ -93,9 +84,9 @@ PARAMS.TXOFFSET = 0;
 
 % TRACKING ALGORITHM TO USE
 % 'samtrack','samauto','ncorr','loupas'
-TRACKPARAMS.TRACK_ALG='samtrack';
+TRACKPARAMS.TRACK_ALG='xcorr_adaptive_cc';
 TRACKPARAMS.WAVELENGTHS = 1.5; % size of tracking kernel in wavelengths
-%TRACKPARAMS.KERNEL_SAMPLES = 85; % samples
+%TRACKPARAMS.WAVELENGTHS = 0.28; % size of tracking kernel in wavelengths (TO MATCH XUAN'S ANALYSIS)
 TRACKPARAMS.KERNEL_SAMPLES = round((PARAMS.field_sample_freq/PARAMS.TX_FREQ)*TRACKPARAMS.WAVELENGTHS);
 
 
@@ -104,15 +95,19 @@ P=rmfield(PPARAMS,'TIMESTEP');
 PHANTOM_DIR=[make_file_name([DEST_DIR 'phantom'],P) '/'];
 unix(sprintf('mkdir %s',PHANTOM_DIR)); % mkdir(PHANTOM_DIR); %matlab 7
 PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
-mkphantomfromdyna3(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
+if(TRACK_ONLY ~= 1),
+    mkphantomfromdyna3(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
+end;
 
 % SCAN PHANTOMS
 RF_DIR=[make_file_name([PHANTOM_DIR 'rf'],PARAMS) '/'];
 unix(sprintf('mkdir %s',RF_DIR)); % mkdir(RF_DIR); %matlab 7
 RF_FILE=[RF_DIR 'rf'];
-field_init(-1);
-do_dyna_scans(PHANTOM_FILE,RF_FILE,PARAMS);
-field_end;
+if(TRACK_ONLY ~= 1),
+    field_init(-1);
+    do_dyna_scans(PHANTOM_FILE,RF_FILE,PARAMS);
+    field_end;
+end;
 
 % TRACK RF
 TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];
