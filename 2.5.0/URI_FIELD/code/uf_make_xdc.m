@@ -77,9 +77,9 @@ elseif strcmp('curvilinear',geometry.probe_type),
 % 2012-09-04
 elseif strcmp('matrix',geometry.probe_type),
 
-        Tx = xdc_2d_array('geometry.no_elements_s,geometry.no_elements_y,geometry.width,geometry.height,geometry.kerf_x,geometry.kerf_y,ENABLED,geometry.no_sub_x,geometry.no_sub_y,geometry.focus);
+        Tx = xdc_2d_array('geometry.no_elements_s,geometry.no_elements_y,geometry.width,geometry.height,geometry.kerf_x,geometry.kerf_y,geometry.tx_enabled,geometry.no_sub_x,geometry.no_sub_y,geometry.focus);
 
-        Rx = xdc_2d_array('geometry.no_elements_s,geometry.no_elements_y,geometry.width,geometry.height,geometry.kerf_x,geometry.kerf_y,ENABLED,geometry.no_sub_x,geometry.no_sub_y,geometry.focus);
+        Rx = xdc_2d_array('geometry.no_elements_s,geometry.no_elements_y,geometry.width,geometry.height,geometry.kerf_x,geometry.kerf_y,geometry.rx_enabled,geometry.no_sub_x,geometry.no_sub_y,geometry.focus);
 
 	xdc_impulse(Tx,uf_ir(geometry));
 	xdc_impulse(Rx,uf_ir(geometry));
