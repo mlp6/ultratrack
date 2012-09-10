@@ -22,11 +22,13 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 % PARAMS.XSTEP			Scanline spacing
 % PARAMS.XMAX			Rightmost scan line
 % PARAMS.TX_FOCUS		Transmit focus depth
-% PARAMS.TX_F_NUM		Transmit f number
+% PARAMS.TX_F_NUM		Transmit f number (lateral)
+% PARAMS.TX_F_NUM_Y     Transmit f-number (elevation - only needed for 2D arrays!!)
 % PARAMS.TX_FREQ		Transmit frequency
 % PARAMS.TX_NUM_CYCLES		Number of cycles in transmit toneburst
 % PARAMS.RX_FOCUS		Depth of receive focus - use zero for dyn. foc
-% PARAMS.RX_F_NUM		Receive aperture f number
+% PARAMS.RX_F_NUM		Receive aperture f number (lateral)
+% PARAMS.RX_F_NUM_Y     Receive aperture f-number (elevation - only needed for 2D arrays!!)
 % PARAMS.RX_GROW_APERTURE	1 means use aperture growth, 0 means don't
 %
 % The uf_scan() call has been modified to allow for parallel rx
@@ -43,6 +45,11 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 % Mark Palmeri (mark.palmeri@duke.edu)
 % 2009-09-26
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Added PARAMS.TX_F_NUM_Y and PARAMS.RX_F_NUM_Y for elevation dimension
+% F/#s *only* when defining the 2D arrays!!
+% Mark Palmeri
+% 2012-09-10
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -52,16 +59,14 @@ XSTEP=PARAMS.XSTEP;		% Scanline spacing
 XMAX= PARAMS.XMAX;		% Rightmost scan line
 TX_FOCUS = PARAMS.TX_FOCUS;	% Tramsmit focus depth
 TX_F_NUM=PARAMS.TX_F_NUM;	% Transmit f number
+TX_F_NUM_Y=PARAMS.TX_F_NUM_Y; % elevation Tx F/#
 TX_FREQ=PARAMS.TX_FREQ;		% Transmit frequency
 TX_NUM_CYCLES=PARAMS.TX_NUM_CYCLES;	% Number of cycles in transmit toneburst
 RX_FOCUS=PARAMS.RX_FOCUS;	% Depth of receive focus - use zero for dyn. foc
 RX_F_NUM=PARAMS.RX_F_NUM;	% Receive aperture f number
+RX_F_NUM_Y=PARAMS.RX_F_NUM_Y; % elevation Rx F/#
 RX_GROW_APERTURE=PARAMS.RX_GROW_APERTURE;	  % 1=grow, 0 = static 
 TXOFFSET = PARAMS.TXOFFSET; % Lateral offset of Rx beam from Tx beam (m)
-
-% enabled matrix array elements (only for 2D matrix arrays!)
-% 2D matrix of 0s (off) and 1s (on) that is no_ele_x x no_ele_y in dimension
-ENABLED = 
 
 % END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -73,6 +78,16 @@ probe=uf_txt_to_probe(PROBE_NAME);
 probe.field_sample_freq=PARAMS.field_sample_freq;
 probe.c = PARAMS.c;
 probe.txoffset = TXOFFSET;
+
+% enabled matrix array elements (only for 2D matrix arrays!)
+% 2D matrix of 0s (off) and 1s (on) that is no_ele_x x no_ele_y in dimension
+if(probe.probe_type=='matrix'),
+    probe.tx_enabled=zeros(probe.no_elements_x,probe.no_elements_y);
+    probe.rx_enabled=zeros(probe.no_elements_x,probe.no_elements_y);
+
+    NEED TO ADD ACTUAL "ON" ELEMENTS HERE!!
+
+end;
 
 % Make transmit and receive apertures as defined by probe
 [tx,rx]=uf_make_xdc(probe);
