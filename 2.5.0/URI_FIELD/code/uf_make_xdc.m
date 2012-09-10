@@ -1,5 +1,4 @@
 function [Tx,Rx]=uf_make_xdc(geometry)
-
 %
 % [Tx,Rx]=uf_make_xdc(geometry)
 %
@@ -9,7 +8,12 @@ function [Tx,Rx]=uf_make_xdc(geometry)
 % Transducers are initialized with geometry information and 
 % impulse response
 %
-
+%%%% MODIFICATION HISTORY %%%%
+% v2.5.0
+% * new 'matrix' probe type for the 2D 4Z1c
+% Mark Palmeri (mlp6@duke.edu)
+% 2012-09-04
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Set sampling frequency
 
@@ -68,7 +72,19 @@ elseif strcmp('curvilinear',geometry.probe_type),
 	xdc_impulse(Tx,uf_ir(geometry));
 	xdc_impulse(Rx,uf_ir(geometry));
 
-end;
+% v2.5.0 - matrix probe additions
+% Mark Palmeri (mlp6@duke.edu)
+% 2012-09-04
+elseif strcmp('matrix',geometry.probe_type),
+
+        Tx = xdc_2d_array('geometry.no_elements_s,geometry.no_elements_y,geometry.width,geometry.height,geometry.kerf_x,geometry.kerf_y,ENABLED,geometry.no_sub_x,geometry.no_sub_y,geometry.focus);
+
+        Rx = xdc_2d_array('geometry.no_elements_s,geometry.no_elements_y,geometry.width,geometry.height,geometry.kerf_x,geometry.kerf_y,ENABLED,geometry.no_sub_x,geometry.no_sub_y,geometry.focus);
+
+	xdc_impulse(Tx,uf_ir(geometry));
+	xdc_impulse(Rx,uf_ir(geometry));
+
+end
 
 
 
