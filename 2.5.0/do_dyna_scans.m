@@ -50,6 +50,12 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 % Mark Palmeri
 % 2012-09-10
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Added two new functions for the matrix definitions:
+% def_matrix_enabled 
+% def_active_min_max_ele_ids
+%
+% Commiting v2.5.0 with these additions for the matrix arrays
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -82,11 +88,11 @@ probe.txoffset = TXOFFSET;
 % enabled matrix array elements (only for 2D matrix arrays!)
 % 2D matrix of 0s (off) and 1s (on) that is no_ele_x x no_ele_y in dimension
 if(probe.probe_type=='matrix'),
-    probe.tx_enabled=zeros(probe.no_elements_x,probe.no_elements_y);
-    probe.rx_enabled=zeros(probe.no_elements_x,probe.no_elements_y);
 
-    NEED TO ADD ACTUAL "ON" ELEMENTS HERE!!
+    [probe.tx_enabled]=def_matrix_enabled(probe.no_elements_x,TX_FNUM,probe.width+probe.kerf_x,probe.no_elements_y,TX_FNUM_Y,probe.height+probe.kerf_y,TX_FOCUS)
 
+    [probe.rx_enabled]=def_matrix_enabled(probe.no_elements_x,RX_FNUM,probe.width+probe.kerf_x,probe.no_elements_y,RX_FNUM_Y,probe.height+probe.kerf_y,RX_FOCUS)
+    
 end;
 
 % Make transmit and receive apertures as defined by probe
@@ -170,8 +176,48 @@ for n=1:length(phantom_files), % For each file,
 	end; % matches if isempty(tstep)
 end; % matches for n loop
 
+end;
 
-%end; % matches try above
-%field_end; % shut down field
+% def_matrix_enabled - new for 2.5.0
+% MLP 2012-10-04
+function [enabled]=def_matrix_enabled(num_ele_x,fnum_x,pitch_x,num_elem_y,fnum_y,pitch_y,focal_depth)
+% this function returns the enabled matrix that contains 0's and 1's determining if elements are 
+% off or on, respectively; this has to be done for the Tx and Rx arrays
 
+    % create a zero matrix for the array (all off)
+    enabled=zeros(num_ele_x,num_ele_y);
 
+    % figure out the min and max indices in each dimension of the aperture
+    [active_x_min,active_x_max]=def_active_min_max_ele_ids(num_ele_x,focal_depth,fnum_x,pitch_x);
+    [active_y_min,active_y_max]=def_active_min_max_ele_ids(num_ele_y,focal_depth,fnum_y,pitch_y);
+
+    % turn on the active elements
+    enabled(active_x_min:active_x_max,active_y_min:active_y_max) = 1;
+
+end;
+
+% def_active_min_max_ele_ids - new for 2.5.0
+% MLP 2012-10-04
+function [active_min,active_max]=def_active_min_max_ele_ids(num_ele,focal_depth,fnum,pitch)
+    % calculate the number of active elements
+    active_elements = (focal_depth / fnum) / pitch;
+    
+    % we want to center this active aperture in the matrix
+    center_element_id = floor(num_ele/2);
+
+    % computer the min and max element ids for the active aperture
+    active_min = center_element_id - floor(active_elements/2);
+    active_max = center_element_id + floor(active_elements/2);
+
+    % check to make sure that the min and max ids don't exceed the number of physical elements
+    if (active_min < 1),
+        warning('Matrix Min Element < 1; being set to 1.  Check matrix definition.');
+        active_min = 1;
+    end;
+
+    if(active_max > num_ele),
+        warning('Matrix Max Element > NUM_ELE; being set to NUM_ELE.  Check matrix definition.');
+        active_max = num_ele;
+    end;
+
+end;
