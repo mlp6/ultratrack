@@ -1,0 +1,17 @@
+%
+% Probe description PH4-1
+%
+
+no_elements		128
+height			13.5/1000
+kerf			0.022/1000
+width			0.198/1000
+elv_focus		25/1000
+probe_type		phased
+f0			3e6
+bw			50
+wavetype		gaussian
+phase			0
+no_sub_x		1
+no_sub_y		7
+
