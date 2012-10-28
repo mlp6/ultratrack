@@ -1,17 +1,15 @@
-%
 % Probe description 4Z1c (as provided by Veronica)
 % Mark Palmeri (mlp6@duke.edu)
 % 2012-09-04
-%
 
 no_elements_x		48
 no_elements_y           36
-%pitch                  0.4/1000
 kerf_y			0.022/1000
 kerf_x			0.022/1000
 height			0.378/1000
 width			0.378/1000
 probe_type		matrix
+image_mode              phased
 f0	                2.7353e6
 bw			42.86
 wavetype		gaussian

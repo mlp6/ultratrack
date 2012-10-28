@@ -22,8 +22,8 @@ phantom.amplitude = double(phantom.amplitude);
 rfdata=zeros(1,beamset.no_beams);
 for n_vector=1:beamset.no_beams,
 	if stat_txt,
-		disp(sprintf('Processing Vector %d of %d',n_vector, beamset.no_beams));
-		end;
+            disp(sprintf('Processing Vector %d of %d',n_vector, beamset.no_beams));
+        end;
 	
 	uf_set_beam(tx,rx,probe,beamset,1,n_vector);
 

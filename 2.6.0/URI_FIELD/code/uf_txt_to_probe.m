@@ -1,5 +1,5 @@
 function [geometry]=uf_txt_to_probe(filename);
-
+%
 % UF_TXT_TO_PROBE   Creates probe struct from probe text data file
 %   function [probe]=uf_txt_to_probe(filename) returns a probe structure
 %   that can be used for scan simulaton.  The string filename is the name
@@ -27,10 +27,12 @@ function [geometry]=uf_txt_to_probe(filename);
 %   Other entries will be ignored with a warning.  Comments my be included
 %   in the file by prefaceing with a % sign (Matlab style commenting)
 %
-
-
 % 10/21/2004, Stephen McAleavey, U. Rochester BME
-%       
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% updated to now also scan for no_elements_[x,y] and kerf_[x,y] for the matrix probes
+% Mark Palmeri (mlp6@duke.edu), 2012-10-11
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %This line reads the probe description file (not Siemens files, our own)
 %The file is assumed to be contain parameters arranged in two columns, with
@@ -46,16 +48,26 @@ for n=1:size(pparam,1),
     switch lower(pparam{n})
         case {'no_elements'} % Number of elements
             geometry.no_elements = str2num(pvalue{n});
+        case {'no_elements_x'} % Number of elements
+            geometry.no_elements_x = str2num(pvalue{n});
+        case {'no_elements_y'} % Number of elements
+            geometry.no_elements_y = str2num(pvalue{n});
         case {'height'} %element height (y direction) (meters)
             geometry.height = str2num(pvalue{n});
         case {'width'} %element width (x, lateral, direction) (meters)
             geometry.width = str2num(pvalue{n});
         case {'kerf'} %space between elements (meters)
             geometry.kerf = str2num(pvalue{n});
+        case {'kerf_x'} %space between elements (meters)
+            geometry.kerf_x = str2num(pvalue{n});
+        case {'kerf_y'} %space between elements (meters)
+            geometry.kerf_y = str2num(pvalue{n});
         case {'elv_focus'} %fixed elevation focus (meters)
             geometry.elv_focus = str2num(pvalue{n});
         case {'probe_type'} %linear, curvilinear, or phased
             geometry.probe_type = lower(pvalue{n});
+        case {'image_mode'} %linear or phased
+            geometry.image_mode = lower(pvalue{n});
         case {'convex_radius'}
             geometry.convex_radius = str2num(pvalue{n});
         case {'f0'} % Transducer center frequency, in Hertz

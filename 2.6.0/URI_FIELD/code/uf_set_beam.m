@@ -27,11 +27,15 @@ function uf_set_vector(Tx,Rx,geometry,beamset,set,vector)
 % * cleaned up old changes to make more readable
 % * incorporated 'linear' and 'phased' imaging modes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2.6.0 (MLP, 2012-10-27)
+% Not sure if I need to add an offset_Y into the mix here for the matrix arrays...
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 SPEED_OF_SOUND = geometry.c;
 txoffset = geometry.txoffset;
 
-offset_X=(geometry.width+geometry.kerf)*geometry.no_elements/2;
+offset_X=(geometry.width+geometry.kerf_x)*geometry.no_elements_x/2;
+% ADD offset_Y for the matrix arrays?! (MLP, 2012-10-27)
 
 %       Settings for transmit aperture:
 %
@@ -64,8 +68,8 @@ xdc_focus(Tx,0,[focus_x+txoffset(1) focus_y+txoffset(2) focus_z]); % Transmit fo
 
 % Tx Apodization
 tx_width=beamset(set).tx_focus_range/beamset(set).tx_f_num(1);
-pitch=geometry.width+geometry.kerf;
-element_position=(0.5+(0:(geometry.no_elements-1)))*pitch-offset_X;
+pitch=geometry.width+geometry.kerf_x;
+element_position=(0.5+(0:(geometry.no_elements_x-1)))*pitch-offset_X;
 
 % txoffset (Mark 06/21/05)
 % specified lateral toffset (Mark, 2012-10-09)
@@ -77,7 +81,11 @@ if (beamset(set).tx_apod_type==1) % If using a hamming window for the tx apodiza
     tx_apodization=tx_apodization.*(0.54+0.46*cos(2*pi*(element_position-(beamset(set).origin(vector,1)+txoffset(1)))/tx_width));
 end;
 
-xdc_apodization(Tx,0,tx_apodization);
+if(~(strcmp(geometry.probe_type,'matrix'))),
+    xdc_apodization(Tx,0,tx_apodization);
+else,
+    warning('Apodization not supported for matrix probes; no Tx apodization applied.');
+end;
 
 % Settings for receive aperture:
 
@@ -102,8 +110,8 @@ end;
 
 % Rx Apodization
 
-pitch=geometry.width+geometry.kerf;
-element_position=(0.5+(0:(geometry.no_elements-1)))*pitch-offset_X;
+pitch=geometry.width+geometry.kerf_x;
+element_position=(0.5+(0:(geometry.no_elements_x-1)))*pitch-offset_X;
 
 for n=1:512,
     ap_times(n,1)=2*beamset(set).rx_f_num(1)*pitch*(n-1)/SPEED_OF_SOUND;
@@ -122,4 +130,8 @@ for n=1:512,
     end;
 end;
 
-xdc_apodization(Rx,ap_times,rx_apodization)
+if(~(strcmp(geometry.probe_type,'matrix'))),
+    xdc_apodization(Rx,ap_times,rx_apodization)
+else,
+    warning('Apodization not supported for matrix probes; no Rx apodization applied.');
+end;

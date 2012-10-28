@@ -1,5 +1,4 @@
 function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
-
 %
 % do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 %
@@ -23,11 +22,11 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 % PARAMS.XSTEP			Scanline spacing
 % PARAMS.XMAX			Rightmost scan line
 % PARAMS.TX_FOCUS		Transmit focus depth
-% PARAMS.TX_F_NUM		Transmit f number (lateral & elevation)
+% PARAMS.TX_FNUM		Transmit f number (lateral & elevation)
 % PARAMS.TX_FREQ		Transmit frequency
 % PARAMS.TX_NUM_CYCLES		Number of cycles in transmit toneburst
 % PARAMS.RX_FOCUS		Depth of receive focus - use zero for dyn. foc
-% PARAMS.RX_F_NUM		Receive aperture f number (lateral & elevation)
+% PARAMS.RX_FNUM		Receive aperture f number (lateral & elevation)
 % PARAMS.RX_GROW_APERTURE	1 means use aperture growth, 0 means don't
 % PARAMS.TXOFFSET               Spatial offset for Tx beam (from Rx) for parallel rx
 %
@@ -68,11 +67,11 @@ XMIN=PARAMS.XMIN;		% Leftmost scan line
 XSTEP=PARAMS.XSTEP;		% Scanline spacing
 XMAX= PARAMS.XMAX;		% Rightmost scan line
 TX_FOCUS = PARAMS.TX_FOCUS;	% Tramsmit focus depth
-TX_F_NUM=PARAMS.TX_F_NUM;	% Transmit f number
+TX_FNUM=PARAMS.TX_F_NUM;	% Transmit f number
 TX_FREQ=PARAMS.TX_FREQ;		% Transmit frequency
 TX_NUM_CYCLES=PARAMS.TX_NUM_CYCLES;	% Number of cycles in transmit toneburst
 RX_FOCUS=PARAMS.RX_FOCUS;	% Depth of receive focus - use zero for dyn. foc
-RX_F_NUM=PARAMS.RX_F_NUM;	% Receive aperture f number
+RX_FNUM=PARAMS.RX_F_NUM;	% Receive aperture f number
 RX_GROW_APERTURE=PARAMS.RX_GROW_APERTURE;	  % 1=grow, 0 = static 
 TXOFFSET = PARAMS.TXOFFSET;     % Lateral & elevation offset of Tx beam from Rx beam (m)
 
@@ -90,11 +89,8 @@ probe.txoffset = TXOFFSET;
 % enabled matrix array elements (only for 2D matrix arrays!)
 % 2D matrix of 0s (off) and 1s (on) that is no_ele_x x no_ele_y in dimension
 if(probe.probe_type=='matrix'),
-
     [probe.tx_enabled]=def_matrix_enabled(probe.no_elements_x,TX_FNUM(1),probe.width+probe.kerf_x,probe.no_elements_y,TX_FNUM(2),probe.height+probe.kerf_y,TX_FOCUS)
-
     [probe.rx_enabled]=def_matrix_enabled(probe.no_elements_x,RX_FNUM(1),probe.width+probe.kerf_x,probe.no_elements_y,RX_FNUM(2),probe.height+probe.kerf_y,RX_FOCUS)
-    
 end;
 
 % Make transmit and receive apertures as defined by probe
@@ -106,7 +102,7 @@ beamset.origin=(XMIN:XSTEP:XMAX)';
 beamset.no_beams=length(beamset.origin);
 beamset.direction=zeros(size(beamset.origin))';
 beamset.tx_focus_range=TX_FOCUS(3);
-beamset.tx_f_num=TX_F_NUM(1);
+beamset.tx_f_num=TX_FNUM(1);
 beamset.tx_excitation.f0=TX_FREQ;
 beamset.tx_excitation.num_cycles=TX_NUM_CYCLES;
 beamset.tx_excitation.phase=0;
@@ -118,7 +114,7 @@ beamset.is_dyn_focus = (RX_FOCUS(3)==0);	% If RX_FOCUS is spec'd zero, use
 					        % dynamic focus
 beamset.rx_focus_range=RX_FOCUS(3);	        % Receive focal point,zero=dynamic
 beamset.rx_apod_type=1; % 1=Hamming, 0 = rectangular apodization
-beamset.rx_f_num=RX_F_NUM;
+beamset.rx_f_num=RX_FNUM;
 beamset.aperture_growth=RX_GROW_APERTURE;
 beamset.apex=NaN;
 beamset.steering_angle=zeros(size(beamset.origin))';
@@ -175,13 +171,13 @@ for n=1:length(phantom_files), % For each file,
 		save(sprintf('%s%03d',OUTPUT_FILE,n),'rf','t0');
 
 	end; % matches if isempty(tstep)
-end; % matches for n loop
+end; 
 
-end;
+end
 
 % def_matrix_enabled - new for 2.5.0
 % MLP 2012-10-04
-function [enabled]=def_matrix_enabled(num_ele_x,fnum_x,pitch_x,num_elem_y,fnum_y,pitch_y,focal_depth)
+function [enabled]=def_matrix_enabled(num_ele_x,fnum_x,pitch_x,num_ele_y,fnum_y,pitch_y,focal_depth)
 % this function returns the enabled matrix that contains 0's and 1's determining if elements are 
 % off or on, respectively; this has to be done for the Tx and Rx arrays
 
@@ -189,13 +185,13 @@ function [enabled]=def_matrix_enabled(num_ele_x,fnum_x,pitch_x,num_elem_y,fnum_y
     enabled=zeros(num_ele_x,num_ele_y);
 
     % figure out the min and max indices in each dimension of the aperture
-    [active_x_min,active_x_max]=def_active_min_max_ele_ids(num_ele_x,focal_depth,fnum_x,pitch_x);
-    [active_y_min,active_y_max]=def_active_min_max_ele_ids(num_ele_y,focal_depth,fnum_y,pitch_y);
+    [active_x_min,active_x_max]=def_active_min_max_ele_ids(num_ele_x,focal_depth(3),fnum_x,pitch_x);
+    [active_y_min,active_y_max]=def_active_min_max_ele_ids(num_ele_y,focal_depth(3),fnum_y,pitch_y);
 
     % turn on the active elements
     enabled(active_x_min:active_x_max,active_y_min:active_y_max) = 1;
 
-end;
+end
 
 % def_active_min_max_ele_ids - new for 2.5.0
 % MLP 2012-10-04
@@ -221,4 +217,4 @@ function [active_min,active_max]=def_active_min_max_ele_ids(num_ele,focal_depth,
         active_max = num_ele;
     end;
 
-end;
+end
