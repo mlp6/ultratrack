@@ -1,4 +1,4 @@
-function []=arfi_scans_template(phantom_seed)
+function []=ultratrack260(phantom_seed)
 % function []=arfi_scans_template(phantom_seed)
 % INPUTS:	
 %   phantom_seed (int) - scatterer position RNG seed
@@ -49,10 +49,11 @@ addpath(ULTRATRACK_PATH)
 addpath([ULTRATRACK_PATH '/URI_FIELD/code']);
 addpath([ULTRATRACK_PATH '/URI_FIELD/code/probes']);
 addpath('/radforce/mlp6/arfi_code/sam/trunk/');
+addpath('/home/mlp6/matlab/Field_II_7.10');
 
 % PARAMETERS FOR PHANTOM CREATION
 % file containing comma-delimited node data
-DYN_FILE='/path/to/nodes.dyn'
+DYN_FILE='/radforce/fem/Veronica_3D_Strain/e0.01/nodes.dyn'
 DEST_DIR = pwd; DEST_DIR = [DEST_DIR '/'];
 ZDISPFILE = [DEST_DIR 'disp.dat'];
 
@@ -62,9 +63,9 @@ PARAMS.c = 1540; % sound speed (m/s)
 
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
-PPARAMS.xmin=[-0.35];PPARAMS.xmax=[0];	% out-of-plane,cm
-PPARAMS.ymin=[0];PPARAMS.ymax=[0.3];	% lateral, cm \
-PPARAMS.zmin=[-7.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!	
+PPARAMS.xmin=[-0.5];PPARAMS.xmax=[0];	% out-of-plane,cm
+PPARAMS.ymin=[0];PPARAMS.ymax=[0.5];	% lateral, cm \
+PPARAMS.zmin=[-9.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!	
 PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
                         % simulate all timesteps
 
@@ -80,14 +81,14 @@ PPARAMS.delta=[0 0 0]   % rigid pre-zdisp-displacement scatterer translation,
                         % sequences
 
 % PARAMETERS FOR SCANNING (PARAMS)
-PARAMS.PROBE_NAME='ph4-1.txt';
-PARAMS.IMAGE_MODE='linear'  % 'linear' or 'phased' (help determine how to do parallel rx and matrix array work)
+PARAMS.PROBE_NAME='4z1c.txt';
+PARAMS.IMAGE_MODE='phased'  % 'linear' or 'phased' (help determine how to do parallel rx and matrix array work)
 PARAMS.XMIN=0;		    % Leftmost scan line (m)
-PARAMS.XSTEP=0.2e-3;	    % Scanline spacing (m)
-PARAMS.XMAX=0.4e-3;	    % Rightmost scan line (m)
-PARAMS.TX_FOCUS=[0 0 3.75e-2];    % Tramsmit focus depth (m)
+PARAMS.XSTEP=0.1e-3;	    % Scanline spacing (m)
+PARAMS.XMAX=1.0e-3;	    % Rightmost scan line (m)
+PARAMS.TX_FOCUS=[0 0 6e-2];    % Tramsmit focus depth (m)
 PARAMS.TX_F_NUM=[2 0];      % Transmit f number (the "y" number only used for 2D matrix arrays)
-PARAMS.TX_FREQ=3.08e6;      % Transmit frequency (Hz)
+PARAMS.TX_FREQ=6.0e6;      % Transmit frequency (Hz)
 PARAMS.TX_NUM_CYCLES=2;     % Number of cycles in transmit toneburst
 PARAMS.RX_FOCUS=[0 0 0];          % Depth of receive focus - use 0 for dyn. foc
 PARAMS.RX_F_NUM=[0.5 0.5];  % Receive aperture f number (the "y" number only used for 2D matrix arrays)
