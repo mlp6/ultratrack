@@ -1,0 +1,19 @@
+%
+% C5-2 Probe Description
+%
+
+no_elements		192
+height			11.2/1000
+kerf			0.0325/1000
+width			0.2925/1000
+elv_focus		25/1000
+convex_radius		50/1000
+probe_type		curvilinear
+f0			4e6
+bw			55
+phase			0
+wavetype		gaussian
+no_sub_x		1
+no_sub_y		7
+
+
