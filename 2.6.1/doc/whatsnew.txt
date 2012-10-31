@@ -1,0 +1,5 @@
+What's new in v2.6.0 of ultratrack
+----------------------------------
+
+* Phased array tracking
+* 2D parallel rx tracking
