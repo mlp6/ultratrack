@@ -7,9 +7,9 @@ s=fieldnames(PARAMS);
 for n=1:length(s),
 	datum=eval(['PARAMS.' s{n}]);
 	if isnumeric(datum) 
-		name=[name '_' s{n} sprintf('%g',datum)];
+		name=[name '_' s{n} sprintf('_%g',datum)];
 	else
-		name=[name '_' s{n} sprintf('%s',datum)];
+		name=[name '_' s{n} sprintf('_%s',datum)];
 	end;
 end;
 

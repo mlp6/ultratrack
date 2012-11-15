@@ -65,9 +65,7 @@ DEST_DIR = pwd;
 DEST_DIR = [DEST_DIR '/'];
 ZDISPFILE = [DEST_DIR 'disp.dat'];
 
-% setup some Field II parameters
-PARAMS.field_sample_freq = 200e6; % Hz
-PARAMS.c = 1540; % sound speed (m/s)
+
 
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
@@ -89,21 +87,25 @@ PPARAMS.pointscatterers.z = 1e-3*[2:4:45]; % Y locations of point scatterers
 PPARAMS.pointscatterers.y = 1e-3*[0]; % Z locations of point scatterers
 PPARAMS.pointscatterers.a = 20; % Point scatterer amplitude
 
-PPARAMS.delta=[0 0 0]   % rigid pre-zdisp-displacement scatterer translation,
+PPARAMS.delta=[0 0 0];   % rigid pre-zdisp-displacement scatterer translation,
 % in the dyna coordinate/unit system to simulate s/w
 % sequences
 
 %%  --------------IMAGING PARAMETERS---------------------------------
-PARAMS.PROBE_NAME='AcuNav10F.txt';
-PARAMS.IMAGE_MODE='phased';  % 'linear' or 'phased' (help determine how to do parallel rx and matrix array work)
+PARAMS.PROBE ='AcuNav10F';
+%PARAMS.IMAGE_MODE='phased';  % 'linear' or 'phased' (help determine how to do parallel rx and matrix array work)
+
+% setup some Field II parameters
+PARAMS.field_sample_freq = 200e6; % Hz
+PARAMS.c = 1540; % sound speed (m/s)
 
 % TRANSMIT BEAM LOCATIONS
 PARAMS.XMIN=    0.5*-3.54e-3;	   % Leftmost scan line (m)
 PARAMS.XSTEP =  0*3.54e-3;      % Azimuth step size (m);
 PARAMS.XMAX=    0.5*3.54e-3;	   % Rightmost scan line (m)
-PARAMS.THMIN =  -25;      % Leftmost azimuth angle (deg)
-PARAMS.THSTEP = 1;    % Azimuth angle step(deg)
-PARAMS.THMAX =  25;      % Rightmost azimuth angle (deg)
+PARAMS.THMIN =  0;      % Leftmost azimuth angle (deg)
+PARAMS.THSTEP = 40;    % Azimuth angle step(deg)
+PARAMS.THMAX =  0;      % Rightmost azimuth angle (deg)
 PARAMS.PHIMIN= 0;      % Frontmost elevation angle (deg)
 PARAMS.PHISTEP = 0;    % Elevation angle step(deg)
 PARAMS.PHIMAX= 0;      % Backmost elevation angle (deg)
@@ -111,11 +113,11 @@ PARAMS.YMIN=   0;		% Frontmost scan line (m)
 PARAMS.YSTEP = 0;      % Elevation step size (m);
 PARAMS.YMAX=   0;	    % Backmost scan line (m)
 PARAMS.APEX = 2*-3.54e-3; %Apex of scan geometry. Set to 0 for linear scanning.
-PARAMS.TX_FOCUS=[0 0 2*-3.54e-3];    % Tramsmit focus depth (m)
+PARAMS.TX_FOCUS= 2*-3.54e-3;    % Tramsmit focus depth (m)
 PARAMS.TX_F_NUM=[1 1];      % Transmit f number (the "y" number only used for 2D matrix arrays)
 PARAMS.TX_FREQ=6.15e6;      % Transmit frequency (Hz)
 PARAMS.TX_NUM_CYCLES=3;     % Number of cycles in transmit toneburst
-PARAMS.RX_FOCUS=[0 0 0];          % Depth of receive focus - use 0 for dyn. foc
+PARAMS.RX_FOCUS= 0;          % Depth of receive focus - use 0 for dyn. foc
 PARAMS.RX_F_NUM=[1 1];  % Receive aperture f number (the "y" number only used for 2D matrix arrays)
 PARAMS.RX_GROW_APERTURE=1;
 
@@ -123,7 +125,7 @@ PARAMS.RX_GROW_APERTURE=1;
 % tracking (now a 2 element array, v2.6.0) (m)
 %%% 2012.11.2 pjh7 adding native parallel receive functionality at lower
 %%% level and swapped tx offsets for rx offsets
-PARAMS.NO_PARALLEL = [1 1]; %[no_X no_Y]
+PARAMS.NO_PARALLEL = [64 1]; %[no_X no_Y]
 PARAMS.PARALLEL_SPACING = [1 1]; % Spread || RX Beams Multiplier [X Y]
 
 %% ---------- AUTOMATICALLY CALCULATED PARAMETERS -------------------
@@ -198,19 +200,19 @@ if PARALLEL_OVERRIDE
     PARAMS.RXOFFSET(:,3:4) = deg2rad(PARAMS.RXOFFSET(:,3:4));
 else
     
-    PARAMS.PARALLEL_TH_MIN  = -0.5*PARAMS.THSTEP*PARAMS.PARALLEL_SPACING(1)* (PARAMS.NO_PARALLEL(1)-1)/(PARAMS.NO_PARALLEL(1));
-    PARAMS.PARALLEL_TH_MAX  =  0.5*PARAMS.THSTEP*PARAMS.PARALLEL_SPACING(1)* (PARAMS.NO_PARALLEL(1)-1)/(PARAMS.NO_PARALLEL(1));
-    PARAMS.PARALLEL_PHI_MIN = -0.5*PARAMS.PHISTEP*PARAMS.PARALLEL_SPACING(2)*(PARAMS.NO_PARALLEL(2)-1)/(PARAMS.NO_PARALLEL(2));
-    PARAMS.PARALLEL_PHI_MAX =  0.5*PARAMS.PHISTEP*PARAMS.PARALLEL_SPACING(2)*(PARAMS.NO_PARALLEL(2)-1)/(PARAMS.NO_PARALLEL(2));
-    PARAMS.PARALLEL_X_MIN   = -0.5*PARAMS.XSTEP*PARAMS.PARALLEL_SPACING(1)*  (PARAMS.NO_PARALLEL(1)-1)/(PARAMS.NO_PARALLEL(1));
-    PARAMS.PARALLEL_X_MAX   =  0.5*PARAMS.XSTEP*PARAMS.PARALLEL_SPACING(1)*  (PARAMS.NO_PARALLEL(1)-1)/(PARAMS.NO_PARALLEL(1));
-    PARAMS.PARALLEL_Y_MIN   = -0.5*PARAMS.YSTEP*PARAMS.PARALLEL_SPACING(2)*  (PARAMS.NO_PARALLEL(2)-1)/(PARAMS.NO_PARALLEL(2));
-    PARAMS.PARALLEL_Y_MAX   =  0.5*PARAMS.YSTEP*PARAMS.PARALLEL_SPACING(2)*  (PARAMS.NO_PARALLEL(2)-1)/(PARAMS.NO_PARALLEL(2));
+    PARALLEL_TH_MIN  = -0.5*PARAMS.THSTEP*PARAMS.PARALLEL_SPACING(1)* (PARAMS.NO_PARALLEL(1)-1)/(PARAMS.NO_PARALLEL(1));
+    PARALLEL_TH_MAX  =  0.5*PARAMS.THSTEP*PARAMS.PARALLEL_SPACING(1)* (PARAMS.NO_PARALLEL(1)-1)/(PARAMS.NO_PARALLEL(1));
+    PARALLEL_PHI_MIN = -0.5*PARAMS.PHISTEP*PARAMS.PARALLEL_SPACING(2)*(PARAMS.NO_PARALLEL(2)-1)/(PARAMS.NO_PARALLEL(2));
+    PARALLEL_PHI_MAX =  0.5*PARAMS.PHISTEP*PARAMS.PARALLEL_SPACING(2)*(PARAMS.NO_PARALLEL(2)-1)/(PARAMS.NO_PARALLEL(2));
+    PARALLEL_X_MIN   = -0.5*PARAMS.XSTEP*PARAMS.PARALLEL_SPACING(1)*  (PARAMS.NO_PARALLEL(1)-1)/(PARAMS.NO_PARALLEL(1));
+    PARALLEL_X_MAX   =  0.5*PARAMS.XSTEP*PARAMS.PARALLEL_SPACING(1)*  (PARAMS.NO_PARALLEL(1)-1)/(PARAMS.NO_PARALLEL(1));
+    PARALLEL_Y_MIN   = -0.5*PARAMS.YSTEP*PARAMS.PARALLEL_SPACING(2)*  (PARAMS.NO_PARALLEL(2)-1)/(PARAMS.NO_PARALLEL(2));
+    PARALLEL_Y_MAX   =  0.5*PARAMS.YSTEP*PARAMS.PARALLEL_SPACING(2)*  (PARAMS.NO_PARALLEL(2)-1)/(PARAMS.NO_PARALLEL(2));
     
-    PARALLEL_TH_OFFSET0 = deg2rad(linspace(PARAMS.PARALLEL_TH_MIN,PARAMS.PARALLEL_TH_MAX,PARAMS.NO_PARALLEL(1)));    %RADIANS!
-    PARALLEL_PHI_OFFSET0 = deg2rad(linspace(PARAMS.PARALLEL_PHI_MIN,PARAMS.PARALLEL_PHI_MAX,PARAMS.NO_PARALLEL(2))); %RADIANS!
-    PARALLEL_X_OFFSET0 = linspace(PARAMS.PARALLEL_X_MIN,PARAMS.PARALLEL_X_MAX,PARAMS.NO_PARALLEL(1));
-    PARALLEL_Y_OFFSET0 = linspace(PARAMS.PARALLEL_Y_MIN,PARAMS.PARALLEL_Y_MAX,PARAMS.NO_PARALLEL(2));
+    PARALLEL_TH_OFFSET0 = deg2rad(linspace(PARALLEL_TH_MIN,PARALLEL_TH_MAX,PARAMS.NO_PARALLEL(1)));    %RADIANS!
+    PARALLEL_PHI_OFFSET0 = deg2rad(linspace(PARALLEL_PHI_MIN,PARALLEL_PHI_MAX,PARAMS.NO_PARALLEL(2))); %RADIANS!
+    PARALLEL_X_OFFSET0 = linspace(PARALLEL_X_MIN,PARALLEL_X_MAX,PARAMS.NO_PARALLEL(1));
+    PARALLEL_Y_OFFSET0 = linspace(PARALLEL_Y_MIN,PARALLEL_Y_MAX,PARAMS.NO_PARALLEL(2));
     
     [PARALLEL_TH_OFFSET PARALLEL_PHI_OFFSET] = meshgrid(PARALLEL_TH_OFFSET0,PARALLEL_PHI_OFFSET0);
     [PARALLEL_X_OFFSET PARALLEL_Y_OFFSET] = meshgrid(PARALLEL_X_OFFSET0,PARALLEL_Y_OFFSET0);
@@ -227,6 +229,11 @@ TRACKPARAMS.KERNEL_SAMPLES = round((PARAMS.field_sample_freq/PARAMS.TX_FREQ)*TRA
 
 %% ---------------  MAP DYNA DISPLACEMENTS TO SCATTERER FIELD ------------
 P=rmfield(PPARAMS,{'TIMESTEP','pointscatterers'});
+P.X = sprintf('%g_%g',10*P.ymin,10*P.ymax);
+P.Y = sprintf('%g_%g',10*P.xmin,10*P.xmax);
+P.Z = sprintf('%g_%g',-10*P.zmax,-10*P.zmin);
+P = rmfield(P,{'xmin','xmax','ymin','ymax','zmin','zmax'});
+
 PHANTOM_DIR=[make_file_name([DEST_DIR 'v_phantom_short'],P) '/'];
 PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
 regeneratephantom = 0;
@@ -238,8 +245,28 @@ end
 
 %% ------------- GENERATE RF SCANS OF SCATTERER FIELDS -------------------
 P = rmfield(PARAMS,{'RXOFFSET','BEAM_ORIGIN_X','BEAM_ORIGIN_Y','BEAM_ANGLE_X','BEAM_ANGLE_Y'});
+P.X = sprintf('%g_%g_%g',1e3*P.XMIN,1e3*P.XSTEP,1e3*P.XMAX);
+P.Y = sprintf('%g_%g_%g',1e3*P.YMIN,1e3*P.YSTEP,1e3*P.YMAX);
+P.PHI = sprintf('%g_%g_%g',P.PHIMIN,P.PHISTEP,P.PHIMAX);
+P.THETA = sprintf('%g_%g_%g',P.THMIN,P.THSTEP,P.THMAX);
+P = rmfield(P,{'XMIN','XMAX','XSTEP','YMIN','YMAX','YSTEP','PHIMIN','PHIMAX','PHISTEP','THMIN','THSTEP','THMAX'});
+P.NO_BEAMS = sprintf('%g_%g',P.NO_BEAMS_X,P.NO_BEAMS_Y);
+P = rmfield(P,{'NO_BEAMS_X','NO_BEAMS_Y'});
+P.NPAR = sprintf('%g_%g',P.NO_PARALLEL(1),P.NO_PARALLEL(2));
+P.PSPACE = sprintf('%g_%g',P.PARALLEL_SPACING(1),P.PARALLEL_SPACING(2));
+P = rmfield(P,{'NO_PARALLEL','PARALLEL_SPACING'});
+P.APEX = sprintf('%g',1e3*P.APEX);
+P.TX_FOCUS = sprintf('%g',1e3*P.TX_FOCUS);
+P.TX_FREQ = sprintf('%g',1e-6*P.TX_FREQ);
+P.FS = sprintf('%g',1e-6*P.field_sample_freq);
+P = rmfield(P,'field_sample_freq');
+P.RX_FOCUS = sprintf('%g',1e3*P.RX_FOCUS);
+P.TX_F_NUM = sprintf('%g_%g',P.TX_F_NUM(1),P.TX_F_NUM(2));
+P.RX_F_NUM = sprintf('%g_%g',P.RX_F_NUM(1),P.RX_F_NUM(2));
+
+
 RF_DIR=[make_file_name([PHANTOM_DIR 'rf'],P) '/'];
-unix(sprintf('mkdir %s',RF_DIR)); % mkdir(RF_DIR); %matlab 7
+mkdir(RF_DIR); %matlab 7
 RF_FILE=[RF_DIR 'rf'];
 field_init(-1);
 do_dyna_scans(PHANTOM_FILE,RF_FILE,PARAMS);

@@ -60,9 +60,6 @@ for n_vector=1:beamset.no_beams;
     end;
 end
 
-xdc_free(tx);
-xdc_free(rx);
-
 whos rfdata
 % Create rf with equal t0s from rfdata
 [rf,t0]=uf_time_eq(rfdata,start_times,probe.field_sample_freq);
