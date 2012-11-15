@@ -67,8 +67,8 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 % BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 debug_fig = 0;
 
-PROBE_NAME = PARAMS.PROBE_NAME;
-IMAGE_MODE = PARAMS.IMAGE_MODE; % 'linear' or 'phased'
+PROBE_NAME = PARAMS.PROBE;
+%IMAGE_MODE = PARAMS.IMAGE_MODE; % 'linear' or 'phased'
 BEAM_ORIGIN_X = PARAMS.BEAM_ORIGIN_X;
 BEAM_ORIGIN_Y = PARAMS.BEAM_ORIGIN_Y;
 BEAM_ANGLE_X = PARAMS.BEAM_ANGLE_X;
@@ -85,6 +85,9 @@ APEX = PARAMS.APEX;
 % END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+if ~strcmp(PROBE_NAME(end-3:end),'.txt')
+    PROBE_NAME = [PROBE_NAME '.txt'];
+end
 % Create probe structure for specified probe
 probe=uf_txt_to_probe(PROBE_NAME);
 %probe.field_sample_freq=100e6;
@@ -127,7 +130,7 @@ elseif length(beamset.originy)>1 && length(beamset.directiony)==1
     beamset.directiony = repmat(beamset.directiony,beamset.no_beamsy,1);
 end
 
-beamset.tx_focus_range=TX_FOCUS(3);
+beamset.tx_focus_range=TX_FOCUS;
 beamset.tx_f_num=TX_FNUM(1);
 beamset.tx_excitation.f0=TX_FREQ;
 beamset.tx_excitation.num_cycles=TX_NUM_CYCLES;
@@ -136,9 +139,9 @@ beamset.tx_excitation.wavetype='Square';
 beamset.prf=NaN;
 beamset.tx_apod_type=1; % Hamming apodization, select 0 for rectangular
 
-beamset.is_dyn_focus = (RX_FOCUS(3)==0);	% If RX_FOCUS is spec'd zero, use	
+beamset.is_dyn_focus = (RX_FOCUS==0);	% If RX_FOCUS is spec'd zero, use	
 					        % dynamic focus
-beamset.rx_focus_range=RX_FOCUS(3);	        % Receive focal point,zero=dynamic
+beamset.rx_focus_range=RX_FOCUS;	        % Receive focal point,zero=dynamic
 beamset.rx_apod_type=1; % 1=Hamming, 0 = rectangular apodization
 beamset.rx_f_num=RX_FNUM;
 beamset.aperture_growth=RX_GROW_APERTURE;
@@ -196,7 +199,7 @@ for n=1:length(phantom_files), % For each file,
         end
         
         % Prepend zeros to make all start at zero
-		rf=[zeros(t0*probe.field_sample_freq,beamset.no_beams, beamset.no_beamsy);rf];
+		rf=[zeros(round(t0*probe.field_sample_freq),beamset.no_beams,beamset.no_beamsy,beamset.no_parallel);rf];
 		t0=0;
 
                 % convert to single precision

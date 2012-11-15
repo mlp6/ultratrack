@@ -34,7 +34,7 @@ function toffset = uf_set_beam(Tx,Rx,geometry,beamset,idx,vectorx,vectory,vector
 % Added parallel receive indexing
 % PJH7 2012.11.2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-debug_fig = 1;
+debug_fig = 0;
 
 SPEED_OF_SOUND = geometry.c;
 %txoffset = geometry.txoffset;
