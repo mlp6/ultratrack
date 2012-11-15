@@ -1,11 +1,11 @@
-function [rf,t0]=uf_scan(probe,beamset,tx,rx,phantom,varargin);
+function [rf,t0]=uf_scan(probe,beamset,phantom,varargin);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make sure that phantom.[position amplitude] are double precision
 % Mark Palmeri (mark.palmeri@duke.edu)
 % 2009-09-26
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if (nargin>5),
+if (nargin>3),
 	stat_win=(varargin{1}==2);
 	stat_txt=(varargin{1}==1);
 	else
@@ -26,10 +26,14 @@ rfdata=zeros(1,beamset.no_beams,beamset.no_beamsy,beamset.no_parallel);
 tic
 for n_vector=1:beamset.no_beams;
     if stat_txt;disp(sprintf('Processing Vector Lat %d of %d',n_vector, beamset.no_beams));end
-    for m_vector = 1:beamset.no_beamsy;
+    for m_vector = 1.beamset.no_beamsy;
         if stat_txt && beamset.no_beamsy>1;disp(sprintf('Processing Vector Elev %d of %d',m_vector, beamset.no_beamsy));end
             for p_vector = 1:beamset.no_parallel;
             if stat_txt && beamset.no_parallel>1;disp(sprintf('Processing Parallel RX %d of %d',p_vector, beamset.no_parallel));end
+            
+            % Make transmit and receive apertures as defined by probe
+            [tx,rx]=uf_make_xdc(probe);
+            
             %	uf_set_beam(tx,rx,probe,beamset,1,n_vector);
             toffset = uf_set_beam(tx,rx,probe,beamset,1,n_vector,m_vector,p_vector);
             % modified to restrict the number of scatterers passed off to scan to
@@ -39,12 +43,17 @@ for n_vector=1:beamset.no_beams;
             
             
             %2012.11.14 Added new dynamic scatter reduction that uses beam sensitivity profile 
-            minDB = -20;
-            gridspacing = [1e-3 2e-3 2e-3];
+            
+            if ~isfield(beamset,'gridspacing')
+                beamset.gridspacing = [1e-3 2e-3 2e-3];
+            end
+             if ~isfield(beamset,'minDB') % This one should get passed in
+                beamset.minDB = -20;
+             end
             
            toc1 = toc;
-           fprintf('Reducing Scatter Field to %0.0f dB limit...',minDB)
-           [red_phantom]=reduce_scats_3(phantom,tx,rx,minDB,gridspacing);
+           fprintf('Reducing Scatter Field to %0.0f dB limit...',beamset.minDB)
+           [red_phantom]=reduce_scats_3(phantom,tx,rx,beamset.minDB,beamset.gridspacing);
            fprintf('done (%1.2fs, %0.1f%% reduction)\n',toc-toc1,100*(1-length(red_phantom.amplitude)/length(phantom.amplitude)));
             
             [v,t1]=calc_scat(tx,rx,red_phantom.position,red_phantom.amplitude);
@@ -56,6 +65,9 @@ for n_vector=1:beamset.no_beams;
             end;
             rfdata(1:length(v),n_vector,m_vector,p_vector)=v;
             start_times(n_vector,m_vector,p_vector)=t1;
+            
+            xdc_free(tx)
+            xdc_free(rx)
         end;
     end;
 end

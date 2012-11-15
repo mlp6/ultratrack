@@ -1,4 +1,4 @@
-  
+        phantom = dog;
         figure(2);clf
         r = ((0:size(rf,1)-1)*(1/probe.field_sample_freq)+t0)*(probe.c/2);
         [th0 dth] = meshgrid(beamset.directionx,beamset.rx_offset(:,3));
