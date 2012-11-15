@@ -58,17 +58,21 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 % v2.6.0
 % Incorporated PARAMS.IMAGE_MODE and mutli-D TX/RX FNUM and TX/RF FOCUS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% v2.6.1
+% Increased ways to specify 1D and Matrix phased array behavior and
+% improved 2- and 3D parallel receive 
+% Peter Hollender
+% 2012-11-2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+debug_fig = 0;
 
 PROBE_NAME = PARAMS.PROBE_NAME;
 IMAGE_MODE = PARAMS.IMAGE_MODE; % 'linear' or 'phased'
-XMIN=PARAMS.XMIN;		% Leftmost scan line
-XSTEP=PARAMS.XSTEP;		% Scanline spacing
-XMAX= PARAMS.XMAX;		% Rightmost scan line
-YMIN=PARAMS.YMIN;		% Leftmost scan line
-YSTEP=PARAMS.YSTEP;		% Scanline spacing
-YMAX= PARAMS.YMAX;		% Rightmost scan line
+BEAM_ORIGIN_X = PARAMS.BEAM_ORIGIN_X;
+BEAM_ORIGIN_Y = PARAMS.BEAM_ORIGIN_Y;
+BEAM_ANGLE_X = PARAMS.BEAM_ANGLE_X;
+BEAM_ANGLE_Y = PARAMS.BEAM_ANGLE_Y;
 TX_FOCUS = PARAMS.TX_FOCUS;	% Tramsmit focus depth
 TX_FNUM=PARAMS.TX_F_NUM;	% Transmit f number
 TX_FREQ=PARAMS.TX_FREQ;		% Transmit frequency
@@ -76,8 +80,8 @@ TX_NUM_CYCLES=PARAMS.TX_NUM_CYCLES;	% Number of cycles in transmit toneburst
 RX_FOCUS=PARAMS.RX_FOCUS;	% Depth of receive focus - use zero for dyn. foc
 RX_FNUM=PARAMS.RX_F_NUM;	% Receive aperture f number
 RX_GROW_APERTURE=PARAMS.RX_GROW_APERTURE;	  % 1=grow, 0 = static 
-TXOFFSET = PARAMS.TXOFFSET;     % Lateral & elevation offset of Tx beam from Rx beam (m)
-
+RXOFFSET = PARAMS.RXOFFSET;     % Lateral,Elevation,Angle_X and Angle_Y offset of Tx beam from Rx beam (m)
+APEX = PARAMS.APEX;
 % END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -87,7 +91,7 @@ probe=uf_txt_to_probe(PROBE_NAME);
 % this was hard-coded, but that was silly - now defined in arfi_scans.m
 probe.field_sample_freq=PARAMS.field_sample_freq;
 probe.c = PARAMS.c;
-probe.txoffset = TXOFFSET;
+%probe.rxoffset = RXOFFSET;
 
 % enabled matrix array elements (only for 2D matrix arrays!)
 % 2D matrix of 0s (off) and 1s (on) that is no_ele_x x no_ele_y in dimension
@@ -101,15 +105,28 @@ end;
 
 % Create beamset based on params above
 beamset.type='B';
-beamset.originx=(XMIN:XSTEP:XMAX)';
-beamset.originy=(YMIN:YSTEP:YMAX)';
+beamset.originx=BEAM_ORIGIN_X';
+beamset.originy=BEAM_ORIGIN_Y';
 if(length(beamset.originy)==0);
    beamset.originy=0;
 end;
-beamset.no_beams=length(beamset.originx);
-beamset.no_beamsy=length(beamset.originy);
-beamset.directionx=zeros(size(beamset.originx))';
-beamset.directiony=zeros(size(beamset.originy))';
+beamset.directionx=BEAM_ANGLE_X';
+beamset.directiony=BEAM_ANGLE_Y';
+
+beamset.no_beams=max(length(beamset.originx),length(beamset.directionx));
+beamset.no_beamsy=max(length(beamset.originy),length(beamset.directiony));
+
+if length(beamset.originx)==1 && length(beamset.directionx)>1
+    beamset.originx = repmat(beamset.originx,beamset.no_beams,1);
+elseif length(beamset.originx)>1 && length(beamset.directionx)==1
+    beamset.directionx = repmat(beamset.directionx,beamset.no_beams,1);
+end
+if length(beamset.originy)==1 && length(beamset.directiony)>1
+    beamset.originy = repmat(beamset.originy,beamset.no_beamsy,1);
+elseif length(beamset.originy)>1 && length(beamset.directiony)==1
+    beamset.directiony = repmat(beamset.directiony,beamset.no_beamsy,1);
+end
+
 beamset.tx_focus_range=TX_FOCUS(3);
 beamset.tx_f_num=TX_FNUM(1);
 beamset.tx_excitation.f0=TX_FREQ;
@@ -125,9 +142,12 @@ beamset.rx_focus_range=RX_FOCUS(3);	        % Receive focal point,zero=dynamic
 beamset.rx_apod_type=1; % 1=Hamming, 0 = rectangular apodization
 beamset.rx_f_num=RX_FNUM;
 beamset.aperture_growth=RX_GROW_APERTURE;
-beamset.apex=NaN;
-beamset.steering_anglex=zeros(size(beamset.originx))';
-beamset.steering_angley=zeros(size(beamset.originy))';
+beamset.apex= APEX;
+beamset.no_parallel = size(RXOFFSET,1);
+beamset.rx_offset = RXOFFSET;
+
+% beamset.steering_anglex=zeros(size(beamset.originx))'; Deprecated? doesn't grep in the codebase pjh7
+% beamset.steering_angley=zeros(size(beamset.originy))';
 
 % Extract the pathname, if any, from PHANTOM_FILE
 slashes=regexp(PHANTOM_FILE,'/'); % slashes has indicies of occurances of '/'
@@ -165,10 +185,17 @@ for n=1:length(phantom_files), % For each file,
 		% Changed to allow for the Rx beam to be offset from the Tx
 		% beam
 		% Mark 06/15/05	
-		%[rf,t0]=uf_scan(probe,beamset,tx,rx,dog);
-
-		[rf,t0]=uf_scan(probe,beamset,tx,rx,dog,TXOFFSET);
-		% Prepend zeros to make all start at zero
+        
+		% Swapped TX offsets for RX offsets and rolled them into beamset
+        % Pete 2012.11.2
+        
+        [rf,t0]=uf_scan(probe,beamset,tx,rx,dog);
+		
+        if debug_fig
+        show_Bmode
+        end
+        
+        % Prepend zeros to make all start at zero
 		rf=[zeros(t0*probe.field_sample_freq,beamset.no_beams, beamset.no_beamsy);rf];
 		t0=0;
 

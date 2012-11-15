@@ -87,3 +87,21 @@ for n=1:size(pparam,1),
     end;
 end;
 
+if ~isfield(geometry,'no_elements_x') && isfield(geometry,'no_elements');
+    geometry.no_elements_x = geometry.no_elements;
+end
+if ~isfield(geometry,'no_elements_y');
+    geometry.no_elements_y = 1;
+end
+if ~isfield(geometry,'width_x') && isfield(geometry,'width');
+    geometry.width_x = geometry.width;
+end
+if ~isfield(geometry,'kerf_x') && isfield(geometry,'kerf');
+    geometry.kerf_x = geometry.kerf;
+end
+if ~isfield(geometry,'width_y') && isfield(geometry,'height');
+    geometry.width_y = geometry.height;
+end
+if ~isfield(geometry,'kerf_y') && isfield(geometry,'kerf');
+    geometry.kerf_y = geometry.kerf;
+end
