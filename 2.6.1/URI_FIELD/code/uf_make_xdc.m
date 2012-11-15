@@ -30,7 +30,7 @@ if (strcmp('linear',geometry.probe_type) | strcmp('phased',geometry.probe_type))
 	% Create transmit and receive apertures with specified geometry
 
 	% Modified to accomodate a lateral offset of the Tx beam (Mark 06/17/05)
-	Tx = xdc_focused_array(geometry.no_elements,geometry.width,geometry.height,geometry.kerf,geometry.elv_focus,geometry.no_sub_x,geometry.no_sub_y, [geometry.txoffset(1) geometry.txoffset(2) geometry.elv_focus]);
+	Tx = xdc_focused_array(geometry.no_elements,geometry.width,geometry.height,geometry.kerf,geometry.elv_focus,geometry.no_sub_x,geometry.no_sub_y, [0 0 geometry.elv_focus]);
 
 	Rx = xdc_focused_array(geometry.no_elements,geometry.width,geometry.height,geometry.kerf,geometry.elv_focus,geometry.no_sub_x,geometry.no_sub_y, [0 0 geometry.elv_focus]);
 
