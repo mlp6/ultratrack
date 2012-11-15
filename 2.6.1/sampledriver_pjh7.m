@@ -48,14 +48,20 @@ function []=sampledriver_pjh7(phantom_seed)
 % Peter Hollender
 % 2012-11-2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% v.2.6.1
+% Added cluster and parfor processing to handle multiple timestamps at once
 
-% PATH TO URI/FIELD/TRACKING FILES:
-ULTRATRACK_PATH = '/getlab/pjh7/ultratrack/2.6.1';
-addpath(ULTRATRACK_PATH)
-addpath([ULTRATRACK_PATH '/URI_FIELD/code']);
-addpath([ULTRATRACK_PATH '/URI_FIELD/code/probes']);
+%% ------------ PATH TO URI/FIELD/TRACKING FILES ---------------
+PARAMS.ULTRATRACK_PATH = '/getlab/pjh7/ultratrack/2.6.1';
+PARAMS.FIELD_PATH = '/getlab/pjh7/FIELDII/';
+PARAMS.SCRATCH_PATH = '/getlab/pjh7/scratch/';
+
+addpath(PARAMS.ULTRATRACK_PATH)
+addpath([PARAMS.ULTRATRACK_PATH '/URI_FIELD/code']);
+addpath([PARAMS.ULTRATRACK_PATH '/URI_FIELD/code/probes']);
+
+addpath(PARAMS.FIELD_PATH);
 %addpath('/radforce/mlp6/arfi_code/sam/trunk/');
-addpath('/home/pjh7/FIELDII/');
 %addpath('/luscinia/vr16/StrainLiver/trackingcode/simtrack');
 
 %% ------------------PHANTOM PARAMETERS----------------------------
@@ -71,7 +77,7 @@ ZDISPFILE = [DEST_DIR 'disp.dat'];
 % leave any empty to use mesh limit
 PPARAMS.xmin=[-0.25];PPARAMS.xmax=[0.25];	% out-of-plane,cm
 PPARAMS.ymin=[-1.5];PPARAMS.ymax=[1.5];	% lateral, cm \
-PPARAMS.zmin=[-2.0];PPARAMS.zmax=[-1.0];% axial, cm   / X,Y SWAPPED vs FIELD!
+PPARAMS.zmin=[-2.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!
 PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
 % simulate all timesteps
 
@@ -82,19 +88,22 @@ PPARAMS.N = round(SCATTERER_DENSITY * TRACKING_VOLUME); % number of scatterers t
 
 PPARAMS.seed=phantom_seed;         % RNG seed
 
+%Optional point-scatterer locations
+USE_POINT_SCATTERERS = 0;
+if USE_POINT_SCATTERERS
 PPARAMS.pointscatterers.x = 1e-3*[-30:4:30]; % X locations of point scatterers
 PPARAMS.pointscatterers.z = 1e-3*[2:4:45]; % Y locations of point scatterers
 PPARAMS.pointscatterers.y = 1e-3*[0]; % Z locations of point scatterers
 PPARAMS.pointscatterers.a = 20; % Point scatterer amplitude
+end
 
 PPARAMS.delta=[0 0 0];   % rigid pre-zdisp-displacement scatterer translation,
 % in the dyna coordinate/unit system to simulate s/w
-% sequences
+% sequences - (2012.11.15 This may be outdated. Peter)
 
 %%  --------------IMAGING PARAMETERS---------------------------------
 PARAMS.PROBE ='AcuNav10F';
-%PARAMS.IMAGE_MODE='phased';  % 'linear' or 'phased' (help determine how to do parallel rx and matrix array work)
-
+PARAMS.COMPUTATIONMETHOD = 'cluster'; % 'cluster','parfor', or 'none'
 % setup some Field II parameters
 PARAMS.field_sample_freq = 200e6; % Hz
 PARAMS.c = 1540; % sound speed (m/s)
@@ -120,7 +129,8 @@ PARAMS.TX_NUM_CYCLES=3;     % Number of cycles in transmit toneburst
 PARAMS.RX_FOCUS= 0;          % Depth of receive focus - use 0 for dyn. foc
 PARAMS.RX_F_NUM=[1 1];  % Receive aperture f number (the "y" number only used for 2D matrix arrays)
 PARAMS.RX_GROW_APERTURE=1;
-
+PARAMS.MINDB = -20; %minimum contribution for including a scatter in sensitivity-based reduction
+PARAMS.GRIDSPACING = [1e-3 2e-3 2e-3]; %Spacing of grid for sensitivity-based scatterer reduction (m)
 % lateral offset of the Tx beam from the Rx beam (m) to simulated prll rx
 % tracking (now a 2 element array, v2.6.0) (m)
 %%% 2012.11.2 pjh7 adding native parallel receive functionality at lower
@@ -228,7 +238,8 @@ TRACKPARAMS.KERNEL_SAMPLES = round((PARAMS.field_sample_freq/PARAMS.TX_FREQ)*TRA
 
 
 %% ---------------  MAP DYNA DISPLACEMENTS TO SCATTERER FIELD ------------
-P=rmfield(PPARAMS,{'TIMESTEP','pointscatterers'});
+P=rmfield(PPARAMS,{'TIMESTEP'});
+if isfield(PPARAMS,'pointscatterers');P = rmfield(P,'pointscatterers');end
 P.X = sprintf('%g_%g',10*P.ymin,10*P.ymax);
 P.Y = sprintf('%g_%g',10*P.xmin,10*P.xmax);
 P.Z = sprintf('%g_%g',-10*P.zmax,-10*P.zmin);
@@ -244,7 +255,7 @@ if isempty(d) || regeneratephantom
 end
 
 %% ------------- GENERATE RF SCANS OF SCATTERER FIELDS -------------------
-P = rmfield(PARAMS,{'RXOFFSET','BEAM_ORIGIN_X','BEAM_ORIGIN_Y','BEAM_ANGLE_X','BEAM_ANGLE_Y'});
+P = rmfield(PARAMS,{'RXOFFSET','BEAM_ORIGIN_X','BEAM_ORIGIN_Y','BEAM_ANGLE_X','BEAM_ANGLE_Y','ULTRATRACK_PATH','FIELD_PATH','SCRATCH_PATH','COMPUTATIONMETHOD'});
 P.X = sprintf('%g_%g_%g',1e3*P.XMIN,1e3*P.XSTEP,1e3*P.XMAX);
 P.Y = sprintf('%g_%g_%g',1e3*P.YMIN,1e3*P.YSTEP,1e3*P.YMAX);
 P.PHI = sprintf('%g_%g_%g',P.PHIMIN,P.PHISTEP,P.PHIMAX);
@@ -263,14 +274,16 @@ P = rmfield(P,'field_sample_freq');
 P.RX_FOCUS = sprintf('%g',1e3*P.RX_FOCUS);
 P.TX_F_NUM = sprintf('%g_%g',P.TX_F_NUM(1),P.TX_F_NUM(2));
 P.RX_F_NUM = sprintf('%g_%g',P.RX_F_NUM(1),P.RX_F_NUM(2));
-
+P.GRID = sprintf('%g_%g_%g',1e3*P.GRIDSPACING(1),1e3*P.GRIDSPACING(2),1e3*P.GRIDSPACING(3));
+P = rmfield(P,'GRIDSPACING');
 
 RF_DIR=[make_file_name([PHANTOM_DIR 'rf'],P) '/'];
 mkdir(RF_DIR); %matlab 7
 RF_FILE=[RF_DIR 'rf'];
-field_init(-1);
+%field_init(-1);
+
 do_dyna_scans(PHANTOM_FILE,RF_FILE,PARAMS);
-field_end;
+%field_end;
 
 %% TRACK RF
 %TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];

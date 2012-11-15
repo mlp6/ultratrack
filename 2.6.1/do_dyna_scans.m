@@ -82,6 +82,8 @@ RX_FNUM=PARAMS.RX_F_NUM;	% Receive aperture f number
 RX_GROW_APERTURE=PARAMS.RX_GROW_APERTURE;	  % 1=grow, 0 = static 
 RXOFFSET = PARAMS.RXOFFSET;     % Lateral,Elevation,Angle_X and Angle_Y offset of Tx beam from Rx beam (m)
 APEX = PARAMS.APEX;
+MINDB = PARAMS.MINDB;
+GRIDSPACING = PARAMS.GRIDSPACING;
 % END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -102,9 +104,6 @@ if(probe.probe_type=='matrix'),
     [probe.tx_enabled]=def_matrix_enabled(probe.no_elements_x,TX_FNUM(1),probe.width+probe.kerf_x,probe.no_elements_y,TX_FNUM(2),probe.height+probe.kerf_y,TX_FOCUS)
     [probe.rx_enabled]=def_matrix_enabled(probe.no_elements_x,RX_FNUM(1),probe.width+probe.kerf_x,probe.no_elements_y,RX_FNUM(2),probe.height+probe.kerf_y,RX_FOCUS)
 end;
-
-% Make transmit and receive apertures as defined by probe
-[tx,rx]=uf_make_xdc(probe);
 
 % Create beamset based on params above
 beamset.type='B';
@@ -149,6 +148,9 @@ beamset.apex= APEX;
 beamset.no_parallel = size(RXOFFSET,1);
 beamset.rx_offset = RXOFFSET;
 
+beamset.minDB = MINDB;
+beamset.gridspacing = GRIDSPACING;
+
 % beamset.steering_anglex=zeros(size(beamset.originx))'; Deprecated? doesn't grep in the codebase pjh7
 % beamset.steering_angley=zeros(size(beamset.originy))';
 
@@ -171,46 +173,79 @@ if isempty(phantom_files),
     error('No phantom files found matching name given');
 end;
 
-for n=1:length(phantom_files), % For each file,
-	tstep=sscanf(phantom_files(n).name,[phantom_name '%03d']);
-	if isempty(tstep),
-		% Warn that we're skipping a file
-		warning(['Skipping ' phantom_files(n).name]);
-	else
-		% Load the phantom
-		s=[phantom_path phantom_files(n).name];
-		bungle=load(s); % an hour of pain here.  phantom was being	
-				% clobberd by function phantom.
-		disp(['Processing ' s]); 
-				
-		dog=bungle.phantom;
-                % Scan the phantom
-		% Changed to allow for the Rx beam to be offset from the Tx
-		% beam
-		% Mark 06/15/05	
-        
-		% Swapped TX offsets for RX offsets and rolled them into beamset
-        % Pete 2012.11.2
-        
-        [rf,t0]=uf_scan(probe,beamset,tx,rx,dog);
-		
-        if debug_fig
-        show_Bmode
-        end
-        
-        % Prepend zeros to make all start at zero
-		rf=[zeros(round(t0*probe.field_sample_freq),beamset.no_beams,beamset.no_beamsy,beamset.no_parallel);rf];
-		t0=0;
+ULTRATRACK_PATH = PARAMS.ULTRATRACK_PATH;
+FIELD_PATH = PARAMS.FIELD_PATH;
 
+switch lower(PARAMS.COMPUTATIONMETHOD)
+    case 'cluster'
+         [pth ID] = fileparts(tempname(pwd));
+        datafile = fullfile(pth,ID);
+        save(datafile,'phantom_files','phantom_path','phantom_name','probe','beamset','ULTRATRACK_PATH','FIELD_PATH','OUTPUT_FILE');
+        sge_file = gen_cluster_sge('cluster_scan',PARAMS.SCRATCH_PATH,length(phantom_files),datafile);
+        returnpath = pwd;
+        cd(ULTRATRACK_PATH)
+        system(sprintf('qsub %s',sge_file))
+        delete(sge_file)
+        cd(returnpath);
+        
+    case 'parfor'
+        [pth ID] = fileparts(tempname(pwd));
+        datafile = fullfile(pth,ID);
+        save(datafile,'phantom_files','phantom_path','phantom_name','probe','beamset','ULTRATRACK_PATH','FIELD_PATH','OUTPUT_FILE');
+        nProc = matlabpool('size');
+        if nProc == 0
+            matlabpool('open')
+        end
+        tic
+        parfor n =1:length(phantom_files)
+            cluster_scan(datafile,n)
+        end
+        if exist(datafile,'file');delete(datafile);end
+        toc
+    otherwise
+        
+        for n=1:length(phantom_files), % For each file,
+            tstep=sscanf(phantom_files(n).name,[phantom_name '%03d']);
+            if isempty(tstep),
+                % Warn that we're skipping a file
+                warning(['Skipping ' phantom_files(n).name]);
+            else
+                % Load the phantom
+                s=[phantom_path phantom_files(n).name];
+                bungle=load(s); % an hour of pain here.  phantom was being
+                % clobberd by function phantom.
+                disp(['Processing ' s]);
+                
+                dog=bungle.phantom;
+                % Scan the phantom
+                % Changed to allow for the Rx beam to be offset from the Tx
+                % beam
+                % Mark 06/15/05
+                
+                % Swapped TX offsets for RX offsets and rolled them into beamset
+                % Pete 2012.11.2
+                
+                [rf,t0]=uf_scan(probe,beamset,dog);
+                
+                if debug_fig
+                    show_Bmode
+                end
+                
+                % Prepend zeros to make all start at zero
+                rf=[zeros(round(t0*probe.field_sample_freq),beamset.no_beams,beamset.no_beamsy,beamset.no_parallel);rf];
+                t0=0;
+                
                 % convert to single precision
                 rf = single(rf);
                 t0 = single(t0);
-
-		% Save the result
-		save(sprintf('%s%03d',OUTPUT_FILE,n),'rf','t0');
-
-	end; % matches if isempty(tstep)
-end; 
+                
+                % Save the result
+                save(sprintf('%s%03d',OUTPUT_FILE,n),'rf','t0');
+                
+            end; % matches if isempty(tstep)
+        end;
+        
+end
 
 end
 
