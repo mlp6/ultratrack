@@ -50,7 +50,7 @@ field_init(-1)
     if length(d)==length(phantom_files)
         fprintf('Last file in. Deleting %s...\n',datafile);
         pause(0.1);
-        if exist(datafile,'file'); %Attempt to handle tiebreakers...
+        if exist([datafile '.mat'],'file'); %Attempt to handle tiebreakers...
             delete([datafile '.mat'])
         end
     end
