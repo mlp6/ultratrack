@@ -64,8 +64,8 @@ PARAMS.c = 1540; % sound speed (m/s)
 
 % TRANSMIT BEAM LOCATIONS
 PARAMS.XMIN=    0;	   % Leftmost scan line (m)
-PARAMS.XSTEP =  0.0001;      % Azimuth step size (m);
-PARAMS.XMAX=    0.0002;	   % Rightmost scan line (m)
+PARAMS.XSTEP =  0;      % Azimuth step size (m);
+PARAMS.XMAX=    0;	   % Rightmost scan line (m)
 PARAMS.THMIN =  0;      % Leftmost azimuth angle (deg)
 PARAMS.THSTEP = 0;    % Azimuth angle step(deg)
 PARAMS.THMAX =  0;      % Rightmost azimuth angle (deg)
