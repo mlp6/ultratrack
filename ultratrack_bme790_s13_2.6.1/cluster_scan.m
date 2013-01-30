@@ -48,11 +48,12 @@ field_init(-1)
     d = dir([OUTPUT_FILE '*.mat']);
     fprintf('%0.0f/%0.0f timesteps completed.',length(d),length(phantom_files));
     if length(d)==length(phantom_files)
-        fprintf('Last file in. Deleting %s...\n',datafile);
-        pause(0.1);
-        if exist(datafile,'file'); %Attempt to handle tiebreakers...
-            delete([datafile '.mat'])
-        end
+        %fprintf('Last file in. Deleting %s...\n',datafile);
+        fprintf('Last file in. \n',datafile);
+        %pause(1.0);
+        %if exist([datafile '.mat'],'file'); %Attempt to handle tiebreakers...
+        %    delete([datafile '.mat'])
+        %end
     end
     
     field_end
