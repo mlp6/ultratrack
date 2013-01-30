@@ -1,0 +1,17 @@
+%
+% This file describes the AcuNav10F probe
+%
+
+no_elements	64 
+height		0.0025
+kerf		0.000011
+width		0.0001
+elv_focus	400
+probe_type	linear
+image_mode  phased
+f0		6150000
+bw		53
+wavetype	gaussian
+phase		0
+no_sub_x	1
+no_sub_y	8
