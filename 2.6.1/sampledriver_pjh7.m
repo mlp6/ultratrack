@@ -245,7 +245,7 @@ P.Y = sprintf('%g_%g',10*P.xmin,10*P.xmax);
 P.Z = sprintf('%g_%g',-10*P.zmax,-10*P.zmin);
 P = rmfield(P,{'xmin','xmax','ymin','ymax','zmin','zmax'});
 
-PHANTOM_DIR=[make_file_name([DEST_DIR 'v_phantom_short'],P) '/'];
+PHANTOM_DIR=[make_file_name([DEST_DIR 'phantom'],P) '/'];
 PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
 regeneratephantom = 0;
 d = dir([PHANTOM_FILE '*.mat']);
