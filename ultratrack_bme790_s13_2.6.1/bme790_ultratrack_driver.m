@@ -10,7 +10,7 @@ function []=bme790_ultratrack_driver(phantom_seed)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% ------------ PATH TO URI/FIELD/TRACKING FILES ---------------
-PARAMS.ULTRATRACK_PATH = '/home/mlp6/ultratrack/2.6.1';  % <- CHANGE THIS TO YOUR LOCAL PATH
+PARAMS.ULTRATRACK_PATH = '/home/mlp6/ultratrack/ultratrack_bme790_s13_2.6.1';  % <- CHANGE THIS TO YOUR LOCAL PATH
 PARAMS.FIELD_PATH = '/home/mlp6/matlab/Field_II_7.10'; % <- CHANGE THIS TO YOUR LOCAL / SYSTEM PATH
 PARAMS.SCRATCH_PATH = '/home/mlp6/scratch/ultratrack/'; % <- CHANGE THIS TO YOUR LOCAL PATH
 
