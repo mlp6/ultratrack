@@ -10,9 +10,9 @@ function []=bme790_ultratrack_driver(phantom_seed)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% ------------ PATH TO URI/FIELD/TRACKING FILES ---------------
-PARAMS.ULTRATRACK_PATH = '/home/mlp6/ultratrack/2.6.1';
-PARAMS.FIELD_PATH = '/home/mlp6/matlab/Field_II_7.10';
-PARAMS.SCRATCH_PATH = '/home/mlp6/scratch/ultratrack/';
+PARAMS.ULTRATRACK_PATH = '/home/mlp6/ultratrack/2.6.1';  % <- CHANGE THIS TO YOUR LOCAL PATH
+PARAMS.FIELD_PATH = '/home/mlp6/matlab/Field_II_7.10'; % <- CHANGE THIS TO YOUR LOCAL / SYSTEM PATH
+PARAMS.SCRATCH_PATH = '/home/mlp6/scratch/ultratrack/'; % <- CHANGE THIS TO YOUR LOCAL PATH
 
 addpath(PARAMS.ULTRATRACK_PATH)
 addpath([PARAMS.ULTRATRACK_PATH '/URI_FIELD/code']);
@@ -22,21 +22,22 @@ addpath(PARAMS.FIELD_PATH);
 
 %% ------------------PHANTOM PARAMETERS----------------------------
 % file containing comma-delimited node data
-DYN_FILE='/home/mlp6/bme/bme790/hw3/mark_sim/nodes.dyn';
+DYN_FILE='/home/mlp6/bme/bme790/hw3/mark_sim/nodes.dyn'; % <- CHANGE THIS TO YOUR SIMS'S nodes.dyn FILE
 DEST_DIR = pwd;
 DEST_DIR = [DEST_DIR '/'];
 ZDISPFILE = [DEST_DIR 'disp.dat'];
 
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
+%% WARNING: DO NOT EXCEED YOUR MESH DIMENSIONS!!!!
 PPARAMS.xmin=[-0.25];PPARAMS.xmax=[0];	% out-of-plane,cm
 PPARAMS.ymin=[0];PPARAMS.ymax=[0.75];	% lateral, cm \
 PPARAMS.zmin=[-4.0];PPARAMS.zmax=[-0.25];% axial, cm   / X,Y SWAPPED vs FIELD!
-PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
-% simulate all timesteps
+PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to simulate all timesteps.
+% ^^^^ WARNING: IF SPECIFYING TIMESTEPS, THEN YOUR ARRAY MUST CONTAIN ONLY CONSECUTIVE INTEGERS; IT CANNOT BE SPARSE
 
 % compute number of scatteres to use
-SCATTERER_DENSITY = 27610; % scatterers/cm^3
+SCATTERER_DENSITY = 27610; % scatterers/cm^3  % <- CHANGE THIS TO SOMETHING REASONABLE FOR YOUR SIMULATION
 TRACKING_VOLUME = (PPARAMS.xmax-PPARAMS.xmin)*(PPARAMS.ymax-PPARAMS.ymin)*(PPARAMS.zmax-PPARAMS.zmin); % cm^3
 PPARAMS.N = round(SCATTERER_DENSITY * TRACKING_VOLUME); % number of scatterers to randomly distribute over the tracking volume
 
