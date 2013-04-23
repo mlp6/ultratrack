@@ -251,7 +251,8 @@ regeneratephantom = 0;
 d = dir([PHANTOM_FILE '*.mat']);
 if isempty(d) || regeneratephantom
     unix(sprintf('mkdir %s',PHANTOM_DIR)); % mkdir(PHANTOM_DIR); %matlab 7
-    mkphantomfromdyna3symmetry(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
+    mkphantomfromdyna3(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
+    %mkphantomfromdyna3symmetry(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
 end
 
 %% ------------- GENERATE RF SCANS OF SCATTERER FIELDS -------------------
