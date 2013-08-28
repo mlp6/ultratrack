@@ -100,7 +100,7 @@ probe.c = PARAMS.c;
 
 % enabled matrix array elements (only for 2D matrix arrays!)
 % 2D matrix of 0s (off) and 1s (on) that is no_ele_x x no_ele_y in dimension
-if(probe.probe_type=='matrix'),
+if(strcmp(probe.probe_type,'matrix')),
     [probe.tx_enabled]=def_matrix_enabled(probe.no_elements_x,TX_FNUM(1),probe.width+probe.kerf_x,probe.no_elements_y,TX_FNUM(2),probe.height+probe.kerf_y,TX_FOCUS)
     [probe.rx_enabled]=def_matrix_enabled(probe.no_elements_x,RX_FNUM(1),probe.width+probe.kerf_x,probe.no_elements_y,RX_FNUM(2),probe.height+probe.kerf_y,RX_FOCUS)
 end;
