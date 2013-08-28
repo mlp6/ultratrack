@@ -181,11 +181,11 @@ switch lower(PARAMS.COMPUTATIONMETHOD)
          [pth ID] = fileparts(tempname(pwd));
         datafile = fullfile(pth,ID);
         save(datafile,'phantom_files','phantom_path','phantom_name','probe','beamset','ULTRATRACK_PATH','FIELD_PATH','OUTPUT_FILE');
-        sge_file = gen_cluster_sge('cluster_scan',PARAMS.SCRATCH_PATH,length(phantom_files),datafile);
+        sge_file = gen_cluster_sge('cluster_scan',PARAMS.SCRATCH_PATH,ULTRATRACK_PATH,length(phantom_files),datafile);
         returnpath = pwd;
-        cd(ULTRATRACK_PATH)
-        system(sprintf('qsub %s',sge_file))
-        delete(sge_file)
+        %cd(ULTRATRACK_PATH)
+        system(sprintf('qsub --bash %s',sge_file))
+        %delete(sge_file)
         cd(returnpath);
         
     case 'parfor'
