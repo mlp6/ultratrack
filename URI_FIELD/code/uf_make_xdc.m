@@ -28,8 +28,6 @@ if (strcmp('linear',geometry.probe_type) | strcmp('phased',geometry.probe_type))
 	% Set up a linear or phased array
 
 	% Create transmit and receive apertures with specified geometry
-
-	% Modified to accomodate a lateral offset of the Tx beam (Mark 06/17/05)
 	Tx = xdc_focused_array(geometry.no_elements,geometry.width,geometry.height,geometry.kerf,geometry.elv_focus,geometry.no_sub_x,geometry.no_sub_y, [0 0 geometry.elv_focus]);
 
 	Rx = xdc_focused_array(geometry.no_elements,geometry.width,geometry.height,geometry.kerf,geometry.elv_focus,geometry.no_sub_x,geometry.no_sub_y, [0 0 geometry.elv_focus]);
@@ -44,9 +42,7 @@ elseif strcmp('curvilinear',geometry.probe_type),
 	% Set up a curvilinear array
 
 	% Create transmit and receive apertures with specified geometry
-
-	% Modified to accomodate a lateral offset of the Tx beam (Mark 06/17/05)
-	Tx = xdc_convex_focused_array(geometry.no_elements,geometry.width,geometry.height,geometry.kerf,geometry.convex_radius,geometry.elv_focus,geometry.no_sub_x,geometry.no_sub_y, [geometry.txoffset(1) geometry.txoffset(2) geometry.elv_focus]);
+	Tx = xdc_convex_focused_array(geometry.no_elements,geometry.width,geometry.height,geometry.kerf,geometry.convex_radius,geometry.elv_focus,geometry.no_sub_x,geometry.no_sub_y, [0 0 geometry.elv_focus]);
 
 	Rx = xdc_convex_focused_array(geometry.no_elements,geometry.width,geometry.height,geometry.kerf,geometry.convex_radius,geometry.elv_focus,geometry.no_sub_x,geometry.no_sub_y, [0 0 geometry.elv_focus]);
 
