@@ -1,77 +1,26 @@
-function []=sampledriver_pjh7(phantom_seed)
-% function []=arfi_scans_template(phantom_seed)
+function []=sampledriver(phantom_seed)
+% function []=sampledriver(phantom_seed)
 % INPUTS:
 %   phantom_seed (int) - scatterer position RNG seed
 % OUTPUTS:
 %   Nothing returned, but lots of files and directories created in PATH
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% MODIFICATION HISTORY
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Original script
-% Mark 04/11/08
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Removed PATH as a function input for SGE array job compatibility.
-%
-% Mark Palmeri (mark.palmeri@duke.edu)
-% 2009-01-04
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2009-09-20 (mlp6)
-%
-% (1) Compute absolute number of scatterers needed from a defined scatterer
-% density to achieve fully developed speckle.
-%
-% (2) Changed zdisp.mat -> zdisp.dat.
-%
-% (3) Corrected path definitions.
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v2.5.0
-% * added PARAMS.TX_FNUM_Y and PARAMS.RX_FNUM_Y for defining the 'enabled'
-%   matrix for xdc_2d_array probes; these parameters only have to be defined
-%   for the matrix probe type (currently, only the 4z1c)!!
-% Mark Palmeri (mlp6@duke.edu)
-% 2012-09-04
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v2.6.0
-% * removed TX_FNUM_Y and RX_FNUM_Y, and instead turned TX_FNUM and RX_FNUM
-%   into 2 element arrays
-% * added PARAMS.IMAGE_MODE (linear or phased) to help figure out how to do
-%   parallel rx later on, and general tracking in a phased configuration
-% Mark Palmeri (mlp6@duke.edu)
-% 2012-10-09
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v2.6.1
-% Increased ways to specify phased array behavior and improved parallel
-% receive specification
-% Peter Hollender
-% 2012-11-2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v.2.6.1
-% Added cluster and parfor processing to handle multiple timestamps at once
-
 %% ------------ PATH TO URI/FIELD/TRACKING FILES ---------------
-PARAMS.ULTRATRACK_PATH = '/getlab/pjh7/ultratrack/2.6.1';
-PARAMS.FIELD_PATH = '/getlab/pjh7/FIELDII/';
-PARAMS.SCRATCH_PATH = '/getlab/pjh7/scratch/';
+PARAMS.ULTRATRACK_PATH = '/radforce/mlp6/ultratrack';
+PARAMS.FIELD_PATH = '/home/mlp6/matlab/Field_II/';
+PARAMS.SCRATCH_PATH = '/radforce/mlp6/scratch/';
 
 addpath(PARAMS.ULTRATRACK_PATH)
 addpath([PARAMS.ULTRATRACK_PATH '/URI_FIELD/code']);
 addpath([PARAMS.ULTRATRACK_PATH '/URI_FIELD/code/probes']);
-
 addpath(PARAMS.FIELD_PATH);
-%addpath('/radforce/mlp6/arfi_code/sam/trunk/');
-%addpath('/luscinia/vr16/StrainLiver/trackingcode/simtrack');
 
 %% ------------------PHANTOM PARAMETERS----------------------------
 % file containing comma-delimited node data
-DYN_FILE='/getlab/pjh7/field_sims/acunav128/mesh/nodes.dyn';
+DYN_FILE='/SPECIFY_PATH_HERE/nodes.dyn';
 DEST_DIR = pwd;
 DEST_DIR = [DEST_DIR '/'];
 ZDISPFILE = [DEST_DIR 'disp.dat'];
-
-
 
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
@@ -83,18 +32,21 @@ PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
 
 % compute number of scatteres to use
 SCATTERER_DENSITY = 2*27610; % scatterers/cm^3
-TRACKING_VOLUME = (PPARAMS.xmax-PPARAMS.xmin)*(PPARAMS.ymax-PPARAMS.ymin)*(PPARAMS.zmax-PPARAMS.zmin); % cm^3
-PPARAMS.N = round(SCATTERER_DENSITY * TRACKING_VOLUME); % number of scatterers to randomly distribute over the tracking volume
+TRACKING_VOLUME = (PPARAMS.xmax - PPARAMS.xmin) * (PPARAMS.ymax - PPARAMS.ymin) ...
+                  * (PPARAMS.zmax - PPARAMS.zmin); % cm^3
+% number of scatterers to randomly distribute over the tracking volume
+PPARAMS.N = round(SCATTERER_DENSITY * TRACKING_VOLUME); 
 
 PPARAMS.seed=phantom_seed;         % RNG seed
 
-%Optional point-scatterer locations
-USE_POINT_SCATTERERS = 0;
-if USE_POINT_SCATTERERS
-PPARAMS.pointscatterers.x = 1e-3*[-30:4:30]; % X locations of point scatterers
-PPARAMS.pointscatterers.z = 1e-3*[2:4:45]; % Y locations of point scatterers
-PPARAMS.pointscatterers.y = 1e-3*[0]; % Z locations of point scatterers
-PPARAMS.pointscatterers.a = 20; % Point scatterer amplitude
+% optional point-scatterer locations
+USE_POINT_SCATTERERS = logical(0);
+if USE_POINT_SCATTERERS,
+    % x, y, z locations and amplitudes of point scatteres
+    PPARAMS.pointscatterers.x = 1e-3 * [-30:4:30]; 
+    PPARAMS.pointscatterers.z = 1e-3 * [2:4:45]; 
+    PPARAMS.pointscatterers.y = 1e-3 * [0]; 
+    PPARAMS.pointscatterers.a = 20;
 end
 
 PPARAMS.delta=[0 0 0];   % rigid pre-zdisp-displacement scatterer translation,
@@ -103,9 +55,9 @@ PPARAMS.delta=[0 0 0];   % rigid pre-zdisp-displacement scatterer translation,
 
 %%  --------------IMAGING PARAMETERS---------------------------------
 PARAMS.PROBE ='AcuNav10F';
-PARAMS.COMPUTATIONMETHOD = 'cluster'; % 'cluster','parfor', or 'none'
+PARAMS.COMPUTATIONMETHOD = 'none'; % 'cluster','parfor', or 'none'
 % setup some Field II parameters
-PARAMS.field_sample_freq = 200e6; % Hz
+PARAMS.field_sample_freq = 1e9; % Hz
 PARAMS.c = 1540; % sound speed (m/s)
 
 % TRANSMIT BEAM LOCATIONS
@@ -151,15 +103,14 @@ PARAMS.PARALLEL_SPACING = [1 1]; % Spread || RX Beams Multiplier [X Y]
 %   [1xN]   [1x1]   - specify each origin, use same angle
 %   [1x1]   [1xN]   - specify each angle, use same origin
 
-TX_BEAM_OVERRIDE = 0;
+TX_BEAM_OVERRIDE = logical(0);
 
-if TX_BEAM_OVERRIDE
+if TX_BEAM_OVERRIDE,
     PARAMS.BEAM_ORIGIN_X = 0;
     PARAMS.BEAM_ORIGIN_Y = 0;
     PARAMS.BEAM_ANGLE_X = 0;
     PARAMS.BEAM_ANGLE_Y = 0;
 else
-    
     PARAMS.BEAM_ORIGIN_X = PARAMS.XMIN:PARAMS.XSTEP:PARAMS.XMAX;
     PARAMS.BEAM_ORIGIN_Y = PARAMS.YMIN:PARAMS.YSTEP:PARAMS.YMAX;
     PARAMS.BEAM_ANGLE_X = PARAMS.THMIN:PARAMS.THSTEP:PARAMS.THMAX;
@@ -183,15 +134,22 @@ PARAMS.BEAM_ANGLE_X = deg2rad(PARAMS.BEAM_ANGLE_X);
 PARAMS.BEAM_ANGLE_Y = deg2rad(PARAMS.BEAM_ANGLE_Y);
 
 
-if length(PARAMS.BEAM_ANGLE_X) > 1 && length(PARAMS.BEAM_ORIGIN_X) > 1 && length(PARAMS.BEAM_ORIGIN_X)~=length(PARAMS.BEAM_ANGLE_X);
-    error('BEAM_ORIGIN_X and BEAM_ANGLE_X cannot both be vectors and have different lengths.')
-end
-if length(PARAMS.BEAM_ANGLE_Y) > 1 && length(PARAMS.BEAM_ORIGIN_Y) > 1 && length(PARAMS.BEAM_ORIGIN_Y)~=length(PARAMS.BEAM_ANGLE_Y);
-    error('BEAM_ORIGIN_Y and BEAM_ANGLE_Y cannot both be vectors and have different lengths.')
+if length(PARAMS.BEAM_ANGLE_X) > 1 && ...
+    length(PARAMS.BEAM_ORIGIN_X) > 1 && ...
+    length(PARAMS.BEAM_ORIGIN_X) ~= ...
+    length(PARAMS.BEAM_ANGLE_X);
+        error('BEAM_ORIGIN_X and BEAM_ANGLE_X cannot both be vectors and have different lengths.')
 end
 
-PARAMS.NO_BEAMS_X = max(length(PARAMS.BEAM_ORIGIN_X),length(PARAMS.BEAM_ANGLE_X));
-PARAMS.NO_BEAMS_Y = max(length(PARAMS.BEAM_ORIGIN_Y),length(PARAMS.BEAM_ANGLE_Y));
+if length(PARAMS.BEAM_ANGLE_Y) > 1 && ...
+    length(PARAMS.BEAM_ORIGIN_Y) > 1 && ...
+    length(PARAMS.BEAM_ORIGIN_Y) ~= ...
+    length(PARAMS.BEAM_ANGLE_Y);
+        error('BEAM_ORIGIN_Y and BEAM_ANGLE_Y cannot both be vectors and have different lengths.')
+end
+
+PARAMS.NO_BEAMS_X = max(length(PARAMS.BEAM_ORIGIN_X), length(PARAMS.BEAM_ANGLE_X));
+PARAMS.NO_BEAMS_Y = max(length(PARAMS.BEAM_ORIGIN_Y), length(PARAMS.BEAM_ANGLE_Y));
 
 
 %  ----------------- PARALLEL RX OVERRIDE ---------------------------
