@@ -82,17 +82,9 @@ scatterers(:,1)=scatterers(:,1)*(PPARAMS.xmax-PPARAMS.xmin)+PPARAMS.xmin;
 scatterers(:,2)=scatterers(:,2)*(PPARAMS.ymax-PPARAMS.ymin)+PPARAMS.ymin;
 scatterers(:,3)=scatterers(:,3)*(PPARAMS.zmax-PPARAMS.zmin)+PPARAMS.zmin;
 
-% NEW ON 12/01/04: Add rigid displacement to scatterers before shift
+% add rigid displacement to scatterers before shift
 scatterers=scatterers+ones(PPARAMS.N,1)*PPARAMS.delta;
 
-% MODIFIED to now read in individual time steps from a binary dat file instead
-% of reading all time steps in at once (and using up excessive amounts of RAM).
-% Old zdisp.mat files can be converted using convert_zdisp_dat.m .
-%
-% Load zdisp file;
-%disp('Loading zdisp...');
-%load(ZDISPFILE);
-%
 if(exist(ZDISPFILE,'file') == 0),
     error(sprintf('%s does not exist.  Make sure that zdisp.mat files are converted to zdisp.dat .',ZDISPFILE));
 end;
@@ -122,13 +114,12 @@ for t=PPARAMS.TIMESTEP,
         clear zdisp_slice
 
 	% Interpolate displacement values
-        sdX=interpn(X,Y,Z,dX,scatterers(:,1),scatterers(:,2),...
+    sdX=interpn(X,Y,Z,dX,scatterers(:,1),scatterers(:,2),...
+	    scatterers(:,3),'linear');
+    sdY=interpn(X,Y,Z,dY,scatterers(:,1),scatterers(:,2),...
+        scatterers(:,3),'linear');
+    sdZ=interpn(X,Y,Z,dZ,scatterers(:,1),scatterers(:,2),...
 		scatterers(:,3),'linear');
-        sdY=interpn(X,Y,Z,dY,scatterers(:,1),scatterers(:,2),...
-                 scatterers(:,3),'linear');
-	sdZ=interpn(X,Y,Z,dZ,scatterers(:,1),scatterers(:,2),...
-		scatterers(:,3),'linear');
-
 
 	% Add displacements to initial scatterer positions
 	% and insert the values in the phantom structure
@@ -142,9 +133,18 @@ for t=PPARAMS.TIMESTEP,
 	% Insert amplitudes for scatterers
 	phantom.amplitude=ones(size(scatterers,1),1);
 
-        % convert to single precision
-        phantom.position = single(phantom.position);
-        phantom.amplitude = single(phantom.amplitude);
+    % Include evenly spaced bright scatterers (if requested) 
+    if isfield(PPARAMS,'pointscatterers')
+        [xpos ypos zpos] = ndgrid(PPARAMS.pointscatterers.x,PPARAMS.pointscatterers.y,PPARAMS.pointscatterers.z);
+        wire_positions = [xpos(:) ypos(:) zpos(:)]; %xyz Scatterer Locations [m]
+        wire_amplitudes = PPARAMS.pointscatterers.a*ones(size(wire_positions,1),1);
+        phantom.position = [phantom.position; wire_positions];
+        phantom.amplitude = [phantom.amplitude; wire_amplitudes];
+    end
+
+    % convert to single precision
+    phantom.position = single(phantom.position);
+    phantom.amplitude = single(phantom.amplitude);
 
 	% Append PPARAMS onto phantom structure
 	phantom.PPARAMS=PPARAMS;
