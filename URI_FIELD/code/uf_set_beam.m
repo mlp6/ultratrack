@@ -60,13 +60,10 @@ x0t = beamset(idx).originx(vectorx)-beamset(idx).apex*(tan(beamset(idx).directio
 y0t = beamset(idx).originy(vectory)-beamset(idx).apex*(tan(beamset(idx).directiony(vectory)));
 z0t = beamset(idx).apex;
 
-% txoffset (Mark 06/17/05)
-% updated to accomodate elevation txoffset (Mark, 2012-10-09)
 % 2012.11.2 removed txoffset functionality and puts in rxoffsets and
 % combined linear and phased modes. (Pete)
 
 xdc_center_focus(Tx,[x0t,y0t,z0t]);
-%xdc_center_focus(Tx,[0 0 0]);
 
 % The potential lateral offset of the beam is taken account in
 % the xdf_focus() command below.
@@ -84,33 +81,22 @@ dly = (1/geometry.c)*sqrt((focus_x-position_x).^2 + (focus_y-position_y).^2 + fo
 dly = dly + (1/geometry.c)*sqrt((focus_x-x0t).^2+(focus_y-y0t).^2+(focus_z-z0t).^2);
 dly = (-1).^(beamset(idx).tx_focus_range>0).*dly;
 if beamset(idx).tx_focus_range>0
-toffset = max(dly(:));
-%dly = dly-max(dly(:));
+    toffset = max(dly(:));
+    %dly = dly-max(dly(:));
 else
-toffset = min(dly(:));
-%dly = dly-min(dly(:));
+    toffset = min(dly(:));
+    %dly = dly-min(dly(:));
 end
 
 xdc_times_focus(Tx,-inf,reshape(dly',1,[]));
 
-
-% txoffset (Mark 06/17/05)
-% updated to accomodate elevation txoffset (Mark, 2012-10-09)
-% updated to remove elevation txoffset (Pete, 2012.11.2)
-%xdc_focus(Tx,-inf,[focus_x focus_y focus_z]); % Transmit focal point
-
-
 % Tx Apodization
 tx_width=abs(beamset(idx).tx_focus_range)/beamset(idx).tx_f_num(1);
 
-% txoffset (Mark 06/21/05)
-% specified lateral toffset (Mark, 2012-10-09)
-% removed lateral txoffset (Pete, 2012.11.2)
 tx_ap_left_limit =-tx_width/2+x0t;
 tx_ap_right_limit= tx_width/2+x0t;
 tx_apodization_x= double((element_position_x>tx_ap_left_limit) & (element_position_x<tx_ap_right_limit));
 if (beamset(idx).tx_apod_type==1) % If using a hamming window for the tx apodization,
-    % txoffset (Mark 06/21/05)
     tx_apodization_x=tx_apodization_x.*(0.54+0.46*cos(2*pi*(element_position_x-x0t)/tx_width));
 end;
 
@@ -120,12 +106,10 @@ end
 
 tx_height=abs(beamset(idx).tx_focus_range)/beamset(idx).tx_f_num(2);
 
-% Pete (2012.11.14)
 tx_ap_bottom_limit =-tx_height/2+y0t;
 tx_ap_top_limit= tx_height/2+y0t;
 tx_apodization_y= double((element_position_y>tx_ap_bottom_limit) & (element_position_y<tx_ap_top_limit));
 if (beamset(idx).tx_apod_type==1) % If using a hamming window for the tx apodization,
-    % txoffset (Mark 06/21/05)
     tx_apodization_y=tx_apodization_y.*(0.54+0.46*cos(2*pi*(element_position_y-y0t)/tx_height));
 end;
 
@@ -213,18 +197,20 @@ for n=1:512,
 
     rx_width=n*pitch;
     
-%Added lateral || rx offset (Pete, 2012.11.2)
+    %Added lateral || rx offset (Pete, 2012.11.2)
     rx_ap_left_limit =-rx_width/2+x0r;
     rx_ap_right_limit= rx_width/2+x0r;;
 
     rx_apodization(n,:)= double((element_position_x>=rx_ap_left_limit) & ...
         (element_position_x<=rx_ap_right_limit));
+
+    % check to see if no elements are on, and if so, at least turn the center
+    % element on
     if ~any(rx_apodization(n,:))
-        if rx_ap_left_limit>element_position_x(end)
-        rx_apodization(n,end) = 1;
-        elseif rx_ap_right_limit<element_position_x(1)
-        rx_apodization(n,1) = 1;
-        end
+        warning(['WARNING: No elements in the apodized Rx aperture weighted on, '...
+                 'so center element turned on.'])
+        center_element = floor(size(rx_apodization,2));
+        rx_apodization(n,center_element) = 1;
     end
 
     if (beamset(idx).rx_apod_type==1) % If using a hamming window
