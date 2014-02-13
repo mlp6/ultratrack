@@ -6,9 +6,9 @@ function []=sampledriver(phantom_seed)
 %   Nothing returned, but lots of files and directories created in PATH
 
 %% ------------ PATH TO URI/FIELD/TRACKING FILES ---------------
-PARAMS.ULTRATRACK_PATH = '/radforce/mlp6/ultratrack';
-PARAMS.FIELD_PATH = '/home/mlp6/matlab/Field_II/';
-PARAMS.SCRATCH_PATH = '/radforce/mlp6/scratch/';
+PARAMS.ULTRATRACK_PATH = '/radforce/mlp6/ultratrack'
+PARAMS.FIELD_PATH = '/home/mlp6/matlab/Field_II/'
+PARAMS.SCRATCH_PATH = '/radforce/mlp6/scratch/'
 
 addpath(PARAMS.ULTRATRACK_PATH)
 addpath([PARAMS.ULTRATRACK_PATH '/URI_FIELD/code']);
@@ -31,32 +31,36 @@ PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
 % simulate all timesteps
 
 % compute number of scatteres to use
-SCATTERER_DENSITY = 2*27610; % scatterers/cm^3
+SCATTERER_DENSITY = 27610; % scatterers/cm^3
 TRACKING_VOLUME = (PPARAMS.xmax - PPARAMS.xmin) * (PPARAMS.ymax - PPARAMS.ymin) ...
                   * (PPARAMS.zmax - PPARAMS.zmin); % cm^3
 % number of scatterers to randomly distribute over the tracking volume
 PPARAMS.N = round(SCATTERER_DENSITY * TRACKING_VOLUME); 
-PPARAMS.rand_scat_amp = 1;
 
 PPARAMS.seed=phantom_seed;         % RNG seed
 
+% amplitude of the randomly-distributed scatterers (set to 0 if you just want
+% the point scatterers defined below)
+PPARAMS.rand_scat_amp = 1;
 % optional point-scatterer locations
 USE_POINT_SCATTERERS = logical(0);
 if USE_POINT_SCATTERERS,
-    % x, y, z locations and amplitudes of point scatteres
+    % x, y, z locations and amplitudes of point scatteres (FIELD II
+    % coordinates)
     PPARAMS.pointscatterers.x = 1e-3 * [-30:4:30]; 
     PPARAMS.pointscatterers.z = 1e-3 * [2:4:45]; 
     PPARAMS.pointscatterers.y = 1e-3 * [0]; 
     PPARAMS.pointscatterers.a = 20;
 end
 
-PPARAMS.delta=[0 0 0];   % rigid pre-zdisp-displacement scatterer translation,
-% in the dyna coordinate/unit system to simulate s/w
-% sequences - (2012.11.15 This may be outdated. Peter)
+% rigid pre-zdisp-displacement scatterer translation, in the dyna
+% coordinate/unit system to simulate ARFI sequences with multiple runs
+PPARAMS.delta=[0 0 0];
 
 %%  --------------IMAGING PARAMETERS---------------------------------
-PARAMS.PROBE ='AcuNav10F';
+PARAMS.PROBE ='ch4-1';
 PARAMS.COMPUTATIONMETHOD = 'none'; % 'cluster','parfor', or 'none'
+
 % setup some Field II parameters
 PARAMS.field_sample_freq = 1e9; % Hz
 PARAMS.c = 1540; % sound speed (m/s)
@@ -139,14 +143,14 @@ if length(PARAMS.BEAM_ANGLE_X) > 1 && ...
     length(PARAMS.BEAM_ORIGIN_X) > 1 && ...
     length(PARAMS.BEAM_ORIGIN_X) ~= ...
     length(PARAMS.BEAM_ANGLE_X);
-        error('BEAM_ORIGIN_X and BEAM_ANGLE_X cannot both be vectors and have different lengths.')
+    error('BEAM_ORIGIN_X and BEAM_ANGLE_X cannot both be vectors and have different lengths.')
 end
 
 if length(PARAMS.BEAM_ANGLE_Y) > 1 && ...
     length(PARAMS.BEAM_ORIGIN_Y) > 1 && ...
     length(PARAMS.BEAM_ORIGIN_Y) ~= ...
     length(PARAMS.BEAM_ANGLE_Y);
-        error('BEAM_ORIGIN_Y and BEAM_ANGLE_Y cannot both be vectors and have different lengths.')
+    error('BEAM_ORIGIN_Y and BEAM_ANGLE_Y cannot both be vectors and have different lengths.')
 end
 
 PARAMS.NO_BEAMS_X = max(length(PARAMS.BEAM_ORIGIN_X), length(PARAMS.BEAM_ANGLE_X));
@@ -165,7 +169,6 @@ PARALLEL_OVERRIDE = 0;
 
 if PARALLEL_OVERRIDE
     PARAMS.RXOFFSET = [0 0 0 0];
-    
     PARAMS.RXOFFSET(:,3:4) = deg2rad(PARAMS.RXOFFSET(:,3:4));
 else
     
@@ -240,10 +243,10 @@ P = rmfield(P,'GRIDSPACING');
 RF_DIR=[make_file_name([PHANTOM_DIR 'rf'],P) '/'];
 mkdir(RF_DIR); %matlab 7
 RF_FILE=[RF_DIR 'rf'];
-%field_init(-1);
 
+field_init(-1);
 do_dyna_scans(PHANTOM_FILE,RF_FILE,PARAMS);
-%field_end;
+field_end;
 
 %% TRACK RF
 %TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];
