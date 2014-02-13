@@ -57,12 +57,9 @@ FD_RATIO=0.01;		% What to mutiply dyna units by (cm) to
 
 % END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
 % Read the .dyn file to get node positions
 disp(sprintf('Loading %s...',DYN_FILE));
 [nodes,X,Y,Z]=read_dot_dyn(DYN_FILE);
-
 
 % Decide on min/max values
 if isempty(PPARAMS.xmin), PPARAMS.xmin=min(X(:)); end; % if a particular value isn't 
@@ -72,11 +69,12 @@ if isempty(PPARAMS.xmax), PPARAMS.xmax=max(X(:)); end; % and plug it in
 if isempty(PPARAMS.ymax), PPARAMS.ymax=max(Y(:)); end; % otherwise leave the value 
 if isempty(PPARAMS.zmax), PPARAMS.zmax=max(Z(:)); end; % supplied unchanged
 
+% check to see if random scatteres are present, and if so, then randomly
+% distribute; otherwise we will assume that you are using defined point targets
 
-% Create scatterers in proscribed volume
-rand('state',PPARAMS.seed); % NEW ON 12/01/04: explicitly seed random generator
-				% to ensure identical scatterer location
-				% if desired
+% Create scatterers in prescribed volume
+% explicitly seed RNG to ensure identical scattere locations on repeat runs
+rand('state',PPARAMS.seed); 
 scatterers=rand(PPARAMS.N,3);
 scatterers(:,1)=scatterers(:,1)*(PPARAMS.xmax-PPARAMS.xmin)+PPARAMS.xmin;
 scatterers(:,2)=scatterers(:,2)*(PPARAMS.ymax-PPARAMS.ymin)+PPARAMS.ymin;
@@ -101,37 +99,39 @@ if isempty(PPARAMS.TIMESTEP), PPARAMS.TIMESTEP=1:NUM_TIMESTEPS; end;
 % Generate displaced scatterers for each timestep
 for t=PPARAMS.TIMESTEP,
 
-	% Get the displacement matricies
-	disp(sprintf('Extracting displacements for timestep %d...',t));
+    % Get the displacement matricies
+    disp(sprintf('Extracting displacements for timestep %d...',t));
 
-        % extract the zdisp values for the appropriate time step
-        fseek(zdisp_fid,3*4+NUM_NODES*NUM_DIMS*(t-1)*4,-1);
-        zdisp_slice = fread(zdisp_fid,NUM_NODES*NUM_DIMS,'float32');
-        zdisp_slice = double(reshape(zdisp_slice,NUM_NODES,NUM_DIMS));
+    % extract the zdisp values for the appropriate time step
+    fseek(zdisp_fid,3*4+NUM_NODES*NUM_DIMS*(t-1)*4,-1);
+    zdisp_slice = fread(zdisp_fid,NUM_NODES*NUM_DIMS,'float32');
+    zdisp_slice = double(reshape(zdisp_slice,NUM_NODES,NUM_DIMS));
 
-	%[dX,dY,dZ]=reform_zdisp_slice(zdisp(:,:,t),nodes);
-	[dX,dY,dZ]=reform_zdisp_slice(zdisp_slice,nodes);
-        clear zdisp_slice
+    %[dX,dY,dZ]=reform_zdisp_slice(zdisp(:,:,t),nodes);
+    [dX, dY, dZ]=reform_zdisp_slice(zdisp_slice, nodes);
+    clear zdisp_slice
 
-	% Interpolate displacement values
+    % Interpolate displacement values
     sdX=interpn(X,Y,Z,dX,scatterers(:,1),scatterers(:,2),...
-	    scatterers(:,3),'linear');
+        scatterers(:,3),'linear');
     sdY=interpn(X,Y,Z,dY,scatterers(:,1),scatterers(:,2),...
         scatterers(:,3),'linear');
     sdZ=interpn(X,Y,Z,dZ,scatterers(:,1),scatterers(:,2),...
-		scatterers(:,3),'linear');
+        scatterers(:,3),'linear');
 
-	% Add displacements to initial scatterer positions
-	% and insert the values in the phantom structure
-	phantom.position=(scatterers+[sdX sdY sdZ])*FD_RATIO;
+    % Add displacements to initial scatterer positions
+    % and insert the values in the phantom structure
+    phantom.position=(scatterers+[sdX sdY sdZ])*FD_RATIO;
 
-	% Reverse z dimension and swap x and y 
-	% to go from dyna-land to field-world
-	phantom.position(:,3)=phantom.position(:,3)*-1;
-	phantom.position=phantom.position(:,[2 1 3]);
+    % Reverse z dimension and swap x and y 
+    % to go from dyna-land to field-world
+    phantom.position(:,3)=phantom.position(:,3)*-1;
+    phantom.position=phantom.position(:,[2 1 3]);
 
-	% Insert amplitudes for scatterers
-	phantom.amplitude=ones(size(scatterers,1),1);
+    % Insert amplitudes for scatterers
+    % Have uniform amplitude, but can set to something other than 1 (e.g., 0,
+    % to only have point scatteres (below))
+    phantom.amplitude=PPARAMS.rand_scat_amp.*ones(size(scatterers,1),1);
 
     % Include evenly spaced bright scatterers (if requested) 
     if isfield(PPARAMS,'pointscatterers')
@@ -146,22 +146,19 @@ for t=PPARAMS.TIMESTEP,
     phantom.position = single(phantom.position);
     phantom.amplitude = single(phantom.amplitude);
 
-	% Append PPARAMS onto phantom structure
+	% append PPARAMS onto phantom structure
 	phantom.PPARAMS=PPARAMS;
 
-	% Save phantom to file
-        save(sprintf('%s%03d',OUTPUT_NAME,t), 'phantom')
-end;
+	% save phantom to file
+    save(sprintf('%s%03d',OUTPUT_NAME,t), 'phantom')
+
+end; % end time loop
 
 fclose(zdisp_fid);
 
-% NEW on 12/01/04: If an output argument is supplied/requested, 
-% output PPARAMS to it.
+% If an output argument is supplied/requested, then output PPARAMS to it.
 if (nargout>0)
-        varargout={PPARAMS};
-        end;
+    varargout={PPARAMS};
+end;
 
 disp('Done.');
-
-
-
