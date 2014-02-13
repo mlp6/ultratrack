@@ -36,6 +36,7 @@ TRACKING_VOLUME = (PPARAMS.xmax - PPARAMS.xmin) * (PPARAMS.ymax - PPARAMS.ymin) 
                   * (PPARAMS.zmax - PPARAMS.zmin); % cm^3
 % number of scatterers to randomly distribute over the tracking volume
 PPARAMS.N = round(SCATTERER_DENSITY * TRACKING_VOLUME); 
+PPARAMS.rand_scat_amp = 1;
 
 PPARAMS.seed=phantom_seed;         % RNG seed
 
