@@ -11,8 +11,8 @@ PARAMS.FIELD_PATH = '/home/mlp6/matlab/Field_II/'
 PARAMS.SCRATCH_PATH = '/radforce/mlp6/scratch/'
 
 addpath(PARAMS.ULTRATRACK_PATH)
-addpath([PARAMS.ULTRATRACK_PATH '/URI_FIELD/code']);
-addpath([PARAMS.ULTRATRACK_PATH '/URI_FIELD/code/probes']);
+addpath([PARAMS.ULTRATRACK_PATH '/code']);
+addpath([PARAMS.ULTRATRACK_PATH '/probes']);
 addpath(PARAMS.FIELD_PATH);
 
 %% ------------------PHANTOM PARAMETERS----------------------------
