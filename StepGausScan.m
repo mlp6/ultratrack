@@ -99,7 +99,7 @@ TRACKPARAMS.TRACK=1;		%1==samtrack, 2==gfptrack
 % MAKE PHANTOMS
 P=rmfield(PPARAMS,'TIMESTEP');
 PHANTOM_DIR=[make_file_name([DEST_DIR 'phantom'],P) '/'];
-unix(sprintf('mkdir %s',PHANTOM_DIR)); % mkdir(PHANTOM_DIR); %matlab 7
+mkdir(PHANTOM_DIR);
 PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
 % UPDATE BY MARK; FLAG TO DETERMINE IF NEW PHANTOM FILES SHOULD
 % BE GENERATED OR NOT
@@ -112,7 +112,7 @@ end;
 
 % SCAN PHANTOMS
 RF_DIR=[make_file_name([PHANTOM_DIR 'rf'],PARAMS) '/'];
-unix(sprintf('mkdir %s',RF_DIR)); % mkdir(RF_DIR); %matlab 7
+mkdir(RF_DIR);
 RF_FILE=[RF_DIR 'rf'];
 field_init(-1);
 set_field('show_times',0);
@@ -127,7 +127,7 @@ field_end;
 if(GENERATE_RF == 1),
 	% TRACK RF
 	TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];
-	unix(sprintf('mkdir %s',TRACK_DIR)); % mkdir(TRACK_DIR); %matlab 7
+	mkdir(TRACK_DIR);
 	TRACK_FILE=[TRACK_DIR 'track'];
 
 	% load all RF into a big matrix
