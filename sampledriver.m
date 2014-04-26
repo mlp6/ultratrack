@@ -212,7 +212,7 @@ PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
 regeneratephantom = 0;
 d = dir([PHANTOM_FILE '*.mat']);
 if isempty(d) || regeneratephantom
-    unix(sprintf('mkdir %s',PHANTOM_DIR)); % mkdir(PHANTOM_DIR); %matlab 7
+    mkdir(PHANTOM_DIR);
     mkphantomfromdyna3(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
     %mkphantomfromdyna3symmetry(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
 end
@@ -250,7 +250,7 @@ field_end;
 
 %% TRACK RF
 %TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];
-%unix(sprintf('mkdir %s',TRACK_DIR)); % mkdir(TRACK_DIR); %matlab 7
+%mkdir(TRACK_DIR); %matlab 7
 
 %% load all RF into a big matrix
 %n=1;
