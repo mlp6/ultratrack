@@ -28,6 +28,7 @@ PPARAMS.xmin=[-0.25];PPARAMS.xmax=[0.25];	% out-of-plane,cm
 PPARAMS.ymin=[-1.5];PPARAMS.ymax=[1.5];	% lateral, cm \
 PPARAMS.zmin=[-2.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!
 PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
+PPARAMS.sym = "q"; % FLAG TO INDICATE SYMMETRY
 % simulate all timesteps
 
 % compute number of scatteres to use
@@ -214,7 +215,6 @@ d = dir([PHANTOM_FILE '*.mat']);
 if isempty(d) || regeneratephantom
     mkdir(PHANTOM_DIR);
     mkphantomfromdyna3(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
-    %mkphantomfromdyna3symmetry(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
 end
 
 %% ------------- GENERATE RF SCANS OF SCATTERER FIELDS -------------------
