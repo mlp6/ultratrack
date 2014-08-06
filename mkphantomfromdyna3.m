@@ -122,7 +122,9 @@ for t=PPARAMS.TIMESTEP,
         nodes = nodesAll(xRange,yRange,zRange);
         
         if strcmp(PPARAMS.SYM,'q')
+            % cat(1... is flipping for SOMETHING
             Xtmp = cat(1,Xtmp,-flipdim(Xtmp(1:end-1,:,:),1));
+            % cat(2... is flipping for SOMETHING ELSE
             Xtmp = cat(2,flipdim(Xtmp(:,2:end,:),2),Xtmp);
             
             Ytmp = cat(2,-flipdim(Ytmp(:,2:end,:),2),Ytmp);
@@ -140,7 +142,9 @@ for t=PPARAMS.TIMESTEP,
     
     if strcmp(PPARAMS.SYM,'q')
         % Account for quarter symmetry in the mesh
+            % cat(1... is flipping for SOMETHING
         dX = cat(1,dX,flipdim(dX(1:end-1,:,:),1));
+            % cat(2... is flipping for SOMETHING ELSE
         dX = cat(2,flipdim(dX(:,2:end,:),2),dX);
         
         dY = cat(1,dY,flipdim(dY(1:end-1,:,:),1));
