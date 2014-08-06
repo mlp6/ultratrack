@@ -24,11 +24,13 @@ ZDISPFILE = [DEST_DIR 'disp.dat'];
 
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
+PPARAMS.SYM = 'q'; % symmetry condition ('q' = quarter, 'h' = half, 'n' = none)
+% TODO: Tomek impletented w/ flipping max/min <-> min/max, assumed about 0
+% could force the user to explicitely make symmetric in bounds below; or save them from themselves
 PPARAMS.xmin=[-0.25];PPARAMS.xmax=[0.25];	% out-of-plane,cm
 PPARAMS.ymin=[-1.5];PPARAMS.ymax=[1.5];	% lateral, cm \
 PPARAMS.zmin=[-2.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!
 PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
-PPARAMS.sym = "q"; % FLAG TO INDICATE SYMMETRY
 % simulate all timesteps
 
 % compute number of scatteres to use
