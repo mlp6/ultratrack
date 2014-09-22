@@ -37,33 +37,9 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 % Mark 06/16/05
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Changed RXOFFSET -> TXOFFSET.
-% Mark 06/17/05
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% converted rf and t0 to single precision variables
-% Mark Palmeri (mark.palmeri@duke.edu)
-% 2009-09-26
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Added PARAMS.TX_F_NUM_Y and PARAMS.RX_F_NUM_Y for elevation dimension
-% F/#s *only* when defining the 2D arrays!!
-% Mark Palmeri
-% 2012-09-10
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Added two new functions for the matrix definitions:
-% def_matrix_enabled 
-% def_active_min_max_ele_ids
-%
-% Commiting v2.5.0 with these additions for the matrix arrays
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v2.6.0
-% Incorporated PARAMS.IMAGE_MODE and mutli-D TX/RX FNUM and TX/RF FOCUS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v2.6.1
-% Increased ways to specify 1D and Matrix phased array behavior and
-% improved 2- and 3D parallel receive 
-% Peter Hollender
-% 2012-11-2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ADD PATHS FOR CODE AND PROBES
+add_paths;
+
 % BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 debug_fig = 0;
 
@@ -83,9 +59,7 @@ RX_GROW_APERTURE=PARAMS.RX_GROW_APERTURE;	  % 1=grow, 0 = static
 RXOFFSET = PARAMS.RXOFFSET;     % Lateral,Elevation,Angle_X and Angle_Y offset of Tx beam from Rx beam (m)
 APEX = PARAMS.APEX;
 MINDB = PARAMS.MINDB;
-GRIDSPACING = PARAMS.GRIDSPACING;
 % END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 if ~strcmp(PROBE_NAME(end-3:end),'.txt')
     PROBE_NAME = [PROBE_NAME '.txt'];
@@ -178,20 +152,21 @@ FIELD_PATH = PARAMS.FIELD_PATH;
 
 switch lower(PARAMS.COMPUTATIONMETHOD)
     case 'cluster'
-         [pth ID] = fileparts(tempname(pwd));
+        [pth ID] = fileparts(tempname(pwd));
         datafile = fullfile(pth,ID);
-        save(datafile,'phantom_files','phantom_path','phantom_name','probe','beamset','ULTRATRACK_PATH','FIELD_PATH','OUTPUT_FILE');
-        sge_file = gen_cluster_sge('cluster_scan',PARAMS.SCRATCH_PATH,ULTRATRACK_PATH,length(phantom_files),datafile);
+        save(datafile, 'phantom_files', 'phantom_path', 'phantom_name', ...
+                       'probe', 'beamset', 'OUTPUT_FILE');
+        sge_file = gen_cluster_sge('cluster_scan', length(phantom_files), ...
+                                   datafile);
         returnpath = pwd;
-        %cd(ULTRATRACK_PATH)
         system(sprintf('qsub --bash %s',sge_file))
-        %delete(sge_file)
         cd(returnpath);
         
     case 'parfor'
         [pth ID] = fileparts(tempname(pwd));
         datafile = fullfile(pth,ID);
-        save(datafile,'phantom_files','phantom_path','phantom_name','probe','beamset','ULTRATRACK_PATH','FIELD_PATH','OUTPUT_FILE');
+        save(datafile, 'phantom_files', 'phantom_path', 'phantom_name', ...
+                       'probe', 'beamset', 'OUTPUT_FILE');
         nProc = matlabpool('size');
         if nProc == 0
             matlabpool('open')
@@ -200,12 +175,14 @@ switch lower(PARAMS.COMPUTATIONMETHOD)
         parfor n =1:length(phantom_files)
             cluster_scan(datafile,n)
         end
-        if exist(datafile,'file');delete(datafile);end
+        if exist(datafile,'file'),
+            delete(datafile);
+        end
+
         toc
     otherwise
-        
         for n=1:length(phantom_files), % For each file,
-            tstep=sscanf(phantom_files(n).name,[phantom_name '%03d']);
+            tstep=sscanf(phantom_files(n).name, [phantom_name '%03d']);
             if isempty(tstep),
                 % Warn that we're skipping a file
                 warning(['Skipping ' phantom_files(n).name]);
@@ -217,15 +194,8 @@ switch lower(PARAMS.COMPUTATIONMETHOD)
                 disp(['Processing ' s]);
                 
                 dog=bungle.phantom;
-                % Scan the phantom
-                % Changed to allow for the Rx beam to be offset from the Tx
-                % beam
-                % Mark 06/15/05
                 
-                % Swapped TX offsets for RX offsets and rolled them into beamset
-                % Pete 2012.11.2
-                
-                [rf,t0]=uf_scan(probe,beamset,dog);
+                [rf,t0]=uf_scan(probe, beamset, dog);
                 
                 if debug_fig
                     show_Bmode
@@ -240,7 +210,7 @@ switch lower(PARAMS.COMPUTATIONMETHOD)
                 t0 = single(t0);
                 
                 % Save the result
-                save(sprintf('%s%03d',OUTPUT_FILE,n),'rf','t0');
+                save(sprintf('%s%03d', OUTPUT_FILE, n), 'rf', 't0');
                 
             end; % matches if isempty(tstep)
         end;
