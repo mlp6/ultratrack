@@ -40,8 +40,6 @@ switch type
         P.RX_FOCUS = sprintf('%g',1e3*P.RX_FOCUS);
         P.TX_F_NUM = sprintf('%g_%g',P.TX_F_NUM(1),P.TX_F_NUM(2));
         P.RX_F_NUM = sprintf('%g_%g',P.RX_F_NUM(1),P.RX_F_NUM(2));
-        P.GRID = sprintf('%g_%g_%g',1e3*P.GRIDSPACING(1),1e3*P.GRIDSPACING(2),1e3*P.GRIDSPACING(3));
-        P = rmfield(P,'GRIDSPACING');
 end
 
 s=fieldnames(P);

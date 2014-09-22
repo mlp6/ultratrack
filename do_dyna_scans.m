@@ -59,9 +59,7 @@ RX_GROW_APERTURE=PARAMS.RX_GROW_APERTURE;	  % 1=grow, 0 = static
 RXOFFSET = PARAMS.RXOFFSET;     % Lateral,Elevation,Angle_X and Angle_Y offset of Tx beam from Rx beam (m)
 APEX = PARAMS.APEX;
 MINDB = PARAMS.MINDB;
-GRIDSPACING = PARAMS.GRIDSPACING;
 % END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 if ~strcmp(PROBE_NAME(end-3:end),'.txt')
     PROBE_NAME = [PROBE_NAME '.txt'];
