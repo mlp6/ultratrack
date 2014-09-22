@@ -8,9 +8,9 @@ generated for each time step using the transducer parameters defined in
 
 Please considering citing this work if you use this code in your work: 
 
-*Palmeri ML, McAleavey SA, Trahey GE, Nightingale KR. "Ultrasonic Tracking of
+[Palmeri ML, McAleavey SA, Trahey GE, Nightingale KR. "Ultrasonic Tracking of
 Acoustic Radiation Force-Induced Displacements in Homogeneous Media," IEEE
-UFFC, 53(7): 1300-1313, 2006.*
+UFFC, 53(7): 1300-1313, 2006.](http://www.ncbi.nlm.nih.gov/pubmed/16889337)
 
 Installation
 ============
