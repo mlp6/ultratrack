@@ -1,5 +1,5 @@
 function []=convert_zdisp_dat(ZDISPFILE)
-% function []=convert_zdisp_dat()
+% function []=convert_zdisp_dat(ZDISPFILE)
 %
 % Convert zdisp.mat -> zdisp.dat so that individual time step data can be read
 % instead of needing to read in all time steps at once (and clobbering
@@ -12,7 +12,8 @@ function []=convert_zdisp_dat(ZDISPFILE)
 %               NUM_NODES
 %               NUM_DIMS (Node ID, X, Y, Z displacements)
 %               NUM_TIMESTEPS
-%               The rest of the data are the concatenation of NUM_NODES x NUM_DIMS x NUM_TIMESTEPS.
+%               The rest of the data are the concatenation of NUM_NODES x
+%               NUM_DIMS x NUM_TIMESTEPS.
 %
 % EXAMPLE: convert_zdisp_dat('/data/mlp6/zdisp.mat')
 %
