@@ -42,7 +42,7 @@ FD_RATIO=0.01;  % What to mutiply dyna units by (cm) to
 
 % Read the .dyn file to get node positions
 disp(sprintf('Loading %s...',DYN_FILE));
-[nodes, X, Y, Z] = read_dot_dyn(DYN_FILE);
+[nodesAll, X, Y, Z] = read_dot_dyn(DYN_FILE);
 
 % Create scatterers in proscribed volume
 rand('state',PPARAMS.seed); % NEW ON 12/01/04: explicitly seed random generator
@@ -88,62 +88,57 @@ for t=PPARAMS.TIMESTEP,
     zdisp_slice = fread(zdisp_fid,NUM_NODES*NUM_DIMS,'float32');
     zdisp_slice = double(reshape(zdisp_slice,NUM_NODES,NUM_DIMS));
     
-    %% NEW STUFF HERE %%
-    %Determine the indices of the nodes in the disp.dat file. This is
-    %necessary for the next step of reforming the displacements into 3D
-    %matrices because it is possible that not all nodes are output in the
-    %NODOUT file (e.g. when using a PML)
+    % Determine the indices of the nodes in the disp.dat file. This is
+    % necessary for the next step of reforming the displacements into 3D
+    % matrices because it is possible that not all nodes are output in the
+    % NODOUT file (e.g. when using a PML)
     if t == PPARAMS.TIMESTEP(1)
-        %Only need to do this on the first iteration of the loop because
-        %the nodal positions don't change
-        [i,j,k]=ind2sub(size(nodesAll),zdisp_slice(:,1));
+        % Only need to do this on the first iteration of the loop because the
+        % nodal positions don't change
+        [i, j, k] = ind2sub(size(nodesAll), zdisp_slice(:,1));
         xRange = min(i):max(i);
         yRange = min(j):max(j);
         zRange = min(k):max(k);
-        Xtmp = X(xRange,yRange,zRange);
-        Ytmp = Y(xRange,yRange,zRange);
-        Ztmp = Z(xRange,yRange,zRange);
-        nodes = nodesAll(xRange,yRange,zRange);
+        Xtmp = X(xRange, yRange, zRange);
+        Ytmp = Y(xRange, yRange, zRange);
+        Ztmp = Z(xRange, yRange, zRange);
+        nodes = nodesAll(xRange, yRange, zRange);
         
-        if strcmp(PPARAMS.SYM,'q')
-            % cat(1... is flipping for SOMETHING
-            Xtmp = cat(1,Xtmp,-flipdim(Xtmp(1:end-1,:,:),1));
-            % cat(2... is flipping for SOMETHING ELSE
-            Xtmp = cat(2,flipdim(Xtmp(:,2:end,:),2),Xtmp);
-            
-            Ytmp = cat(2,-flipdim(Ytmp(:,2:end,:),2),Ytmp);
-            Ytmp = cat(1,Ytmp,flipdim(Ytmp(1:end-1,:,:),1));
-            
-            Ztmp = cat(1,Ztmp,flipdim(Ztmp(1:end-1,:,:),1));
-            Ztmp = cat(2,flipdim(Ztmp(:,2:end,:),2),Ztmp);
+        switch PPARAMS.sym
+            case 'q'
+                Xtmp = cat(1, Xtmp, -flipdim(Xtmp(1:end-1,:,:), 1));
+                Xtmp = cat(2, flipdim(Xtmp(:,2:end,:), 2), Xtmp);
+                
+                Ytmp = cat(2, -flipdim(Ytmp(:,2:end,:), 2), Ytmp);
+                Ytmp = cat(1, Ytmp, flipdim(Ytmp(1:end-1,:,:), 1));
+                
+                Ztmp = cat(1, Ztmp, flipdim(Ztmp(1:end-1,:,:), 1));
+                Ztmp = cat(2, flipdim(Ztmp(:,2:end,:),2), Ztmp);
+            case 'h'
+                error('Half symmetry not implemented yet.');
         end
     end
         
-    %% END NEW STUFF %%
-
     % Rearrange the displacement matrix into three 3D matrices corresponding to
     % x-displacement, y-displacement, and z-displacement
     [dX, dY, dZ]=reform_zdisp_slice(zdisp_slice, nodes);
     clear zdisp_slice
     
-    if strcmp(PPARAMS.SYM,'q')
-        % Account for quarter symmetry in the mesh
-            % cat(1... is flipping for SOMETHING
-        dX = cat(1,dX,flipdim(dX(1:end-1,:,:),1));
-            % cat(2... is flipping for SOMETHING ELSE
-        dX = cat(2,flipdim(dX(:,2:end,:),2),dX);
-        
-        dY = cat(1,dY,flipdim(dY(1:end-1,:,:),1));
-        dY = cat(2,flipdim(dY(:,2:end,:),2),dY);
-        
-        dZ = cat(1,dZ,flipdim(dZ(1:end-1,:,:),1));
-        dZ = cat(2,flipdim(dZ(:,2:end,:),2),dZ);
-    elseif strcmp(PPARAMS.SYM,'h')
-        error('Half symmetry not implemented yet.');
+    switch PPARAMS.sym
+        case 'q'
+            dX = cat(1, dX, flipdim(dX(1:end-1,:,:), 1));
+            dX = cat(2, flipdim(dX(:,2:end,:), 2), dX);
+            
+            dY = cat(1, dY, flipdim(dY(1:end-1,:,:), 1));
+            dY = cat(2, flipdim(dY(:,2:end,:),2), dY);
+            
+            dZ = cat(1, dZ, flipdim(dZ(1:end-1,:,:), 1));
+            dZ = cat(2, flipdim(dZ(:,2:end,:),2), dZ);
+        case 'h'
+            error('Half symmetry not implemented yet.');
     end
     
     % Interpolate displacement values
-<<<<<<< HEAD
     sdX = interpn(Xtmp, Ytmp, Ztmp, dX, scatterers(:,1), scatterers(:,2), ...
                   scatterers(:,3), 'linear');
     sdY = interpn(Xtmp, Ytmp, Ztmp, dY, scatterers(:,1), scatterers(:,2), ...
