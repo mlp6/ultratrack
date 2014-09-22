@@ -6,14 +6,11 @@ function []=sampledriver(phantom_seed)
 %   Nothing returned, but lots of files and directories created in PATH
 
 %% ------------ PATH TO URI/FIELD/TRACKING FILES ---------------
-PARAMS.ULTRATRACK_PATH = '/radforce/mlp6/ultratrack'
-PARAMS.FIELD_PATH = '/home/mlp6/matlab/Field_II/'
-PARAMS.SCRATCH_PATH = '/radforce/mlp6/scratch/'
-
-addpath(PARAMS.ULTRATRACK_PATH)
-addpath([PARAMS.ULTRATRACK_PATH '/code']);
-addpath([PARAMS.ULTRATRACK_PATH '/probes']);
-addpath(PARAMS.FIELD_PATH);
+functionDir = fileparts(which(mfilename));
+probesPath = fullfile(functionDir, 'probes/ultratrack');
+check_add_probes(probesPath);
+codePath = fullfile(functionDir, 'code');
+check_add_probes(codePath);
 
 %% ------------------PHANTOM PARAMETERS----------------------------
 % file containing comma-delimited node data
@@ -218,7 +215,7 @@ if isempty(d) || regeneratephantom
 end
 
 %% ------------- GENERATE RF SCANS OF SCATTERER FIELDS -------------------
-P = rmfield(PARAMS,{'RXOFFSET','BEAM_ORIGIN_X','BEAM_ORIGIN_Y','BEAM_ANGLE_X','BEAM_ANGLE_Y','ULTRATRACK_PATH','FIELD_PATH','SCRATCH_PATH','COMPUTATIONMETHOD'});
+P = rmfield(PARAMS,{'RXOFFSET','BEAM_ORIGIN_X','BEAM_ORIGIN_Y','BEAM_ANGLE_X','BEAM_ANGLE_Y','ULTRATRACK_PATH','FIELD_PATH','COMPUTATIONMETHOD'});
 P.X = sprintf('%g_%g_%g',1e3*P.XMIN,1e3*P.XSTEP,1e3*P.XMAX);
 P.Y = sprintf('%g_%g_%g',1e3*P.YMIN,1e3*P.YSTEP,1e3*P.YMAX);
 P.PHI = sprintf('%g_%g_%g',P.PHIMIN,P.PHISTEP,P.PHIMAX);
