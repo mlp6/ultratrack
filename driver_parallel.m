@@ -1,5 +1,5 @@
-function sampledriver(phantom_seed, nodes, dispdat)
-% function sampledriver(phantom_seed, nodes, dispdat)
+function driver_parallel(phantom_seed, nodes, dispdat)
+% function driver_parallel(phantom_seed, nodes, dispdat)
 % INPUTS:
 %   phantom_seed (int) - scatterer position RNG seed
 %   nodes (string) - location of nodes.dyn (comma-delimited); must be absolute
@@ -11,7 +11,7 @@ function sampledriver(phantom_seed, nodes, dispdat)
 %   Nothing returned, but lots of files and directories created in the parent
 %   directory of disp.
 %
-% EXAMPLE: sampledriver(0, './nodes.dyn', './disp.dat')
+% EXAMPLE: driver_parallel(0, './nodes.dyn', './disp.dat')
 %
 
 % ------------------PHANTOM PARAMETERS----------------------------
