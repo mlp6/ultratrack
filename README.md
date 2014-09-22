@@ -1,9 +1,10 @@
 Ultrasonic Tracking Simulation Tools
 ====================================
-Field II ultrasonic displacement tracking code using FEM displacement fields.
-The 3D nodal displacement data from the FEM sims are used to translate a volume
-of acoustic scattereres, and synthetic RF data is generated for each time step
-using the transducer parameters defined in ```sampledriver.m```.
+[http://field=ii.dk](Field II) ultrasonic displacement tracking code using FEM
+displacement fields.  The 3D nodal displacement data from the FEM sims are used
+to translate a volume of acoustic scattereres, and synthetic RF data is
+generated for each time step using the transducer parameters defined in
+[sampledriver.m](sampledriver.m).
 
 Please considering citing this work if you use this code in your work: 
 
@@ -22,7 +23,7 @@ Installation
 
  * There is a ```probes``` submodule available to restricted institutions.  If
    you do not have access to that repository, then you can use
-   ```probe_linear.m``` as starting points to define transducers.  
+   [probe_linear.m](probe_linear.m) as starting points to define transducers.  
    
    If you do have access, then you can initialize the submodule using:
    
