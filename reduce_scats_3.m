@@ -1,5 +1,5 @@
-function [phantom]=reduce_scats_3(phantom,tx,rx,minDB,gridspacing)
-% function [phantom]=reduce_scats_3(phantom,tx,rx,minDB,gridspacing))
+function [phantom]=reduce_scats_3(phantom, tx, rx, minDB, gridspacing)
+% function [phantom]=reduce_scats_3(phantom, tx, rx, minDB, gridspacing))
 %
 % Uses a coarse simulated grid of test points to calculate the two-way beam
 % profile, and returns the phantom structure with only the points expected
@@ -31,8 +31,13 @@ function [phantom]=reduce_scats_3(phantom,tx,rx,minDB,gridspacing)
 debug_fig = 0;
 
 if ~exist('gridspacing','var')
-gridspacing = [1e-3 1e-3 1e-3];
+    gridspacing = [1e-3 1e-3 1e-3];
 end
+if ~exist('minDB','var')
+    minDB = -20;
+end
+
+fprintf('Reducing Scatter Field to %0.0f dB limit...', minDB);
 
 latmin = phantom.PPARAMS.ymin*1e-2; % X-Y SWAPPED per DYNA specification
 latmax = phantom.PPARAMS.ymax*1e-2;
@@ -70,27 +75,28 @@ V1 = interp3(Z,X,Y,V,double(phantom.position(:,3)),double(phantom.position(:,1))
 
 keepers = V1>minDB | phantom.amplitude>1;
 
+fprintf('done (%0.1f%% reduction)\n', 100*(1-length(keepers)/length(phantom.amplitude)));
 
-if debug_fig;
-figure(5);
-cla
-plot3(1e3*phantom.position(:,1),1e3*phantom.position(:,2),1e3*phantom.position(:,3),'r.','Markersize',1)
+if debug_fig
+    figure(5);
+    cla
+    plot3(1e3*phantom.position(:,1),1e3*phantom.position(:,2),1e3*phantom.position(:,3),'r.','Markersize',1)
 end
 
 phantom.position = phantom.position(keepers,:);
 phantom.amplitude = phantom.amplitude(keepers,:);
 
 if debug_fig
-hold on
-plot3(1e3*(phantom.position(:,1)),...
-    1e3*phantom.position(:,2),...
-    1e3*phantom.position(:,3),'b.')
-xlabel('x (mm)')
-ylabel('y (mm)')
-zlabel('z (mm)')
-axis equal
-axis ij
-axis(1e3*[latmin latmax elevmin elevmax -1*axmax -1*axmin]);
-drawnow
-hold off
+    hold on
+    plot3(1e3*(phantom.position(:,1)),...
+        1e3*phantom.position(:,2),...
+        1e3*phantom.position(:,3),'b.')
+    xlabel('x (mm)')
+    ylabel('y (mm)')
+    zlabel('z (mm)')
+    axis equal
+    axis ij
+    axis(1e3*[latmin latmax elevmin elevmax -1*axmax -1*axmin]);
+    drawnow
+    hold off
 end
