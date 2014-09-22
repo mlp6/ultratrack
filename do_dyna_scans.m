@@ -152,20 +152,21 @@ FIELD_PATH = PARAMS.FIELD_PATH;
 
 switch lower(PARAMS.COMPUTATIONMETHOD)
     case 'cluster'
-         [pth ID] = fileparts(tempname(pwd));
+        [pth ID] = fileparts(tempname(pwd));
         datafile = fullfile(pth,ID);
-        save(datafile,'phantom_files','phantom_path','phantom_name','probe','beamset','ULTRATRACK_PATH','FIELD_PATH','OUTPUT_FILE');
-        sge_file = gen_cluster_sge('cluster_scan',PARAMS.SCRATCH_PATH,ULTRATRACK_PATH,length(phantom_files),datafile);
+        save(datafile, 'phantom_files', 'phantom_path', 'phantom_name', ...
+                       'probe', 'beamset', 'OUTPUT_FILE');
+        sge_file = gen_cluster_sge('cluster_scan', length(phantom_files), ...
+                                   datafile);
         returnpath = pwd;
-        %cd(ULTRATRACK_PATH)
         system(sprintf('qsub --bash %s',sge_file))
-        %delete(sge_file)
         cd(returnpath);
         
     case 'parfor'
         [pth ID] = fileparts(tempname(pwd));
         datafile = fullfile(pth,ID);
-        save(datafile,'phantom_files','phantom_path','phantom_name','probe','beamset','ULTRATRACK_PATH','FIELD_PATH','OUTPUT_FILE');
+        save(datafile, 'phantom_files', 'phantom_path', 'phantom_name', ...
+                       'probe', 'beamset', 'OUTPUT_FILE');
         nProc = matlabpool('size');
         if nProc == 0
             matlabpool('open')
@@ -174,12 +175,14 @@ switch lower(PARAMS.COMPUTATIONMETHOD)
         parfor n =1:length(phantom_files)
             cluster_scan(datafile,n)
         end
-        if exist(datafile,'file');delete(datafile);end
+        if exist(datafile,'file'),
+            delete(datafile);
+        end
+
         toc
     otherwise
-        
         for n=1:length(phantom_files), % For each file,
-            tstep=sscanf(phantom_files(n).name,[phantom_name '%03d']);
+            tstep=sscanf(phantom_files(n).name, [phantom_name '%03d']);
             if isempty(tstep),
                 % Warn that we're skipping a file
                 warning(['Skipping ' phantom_files(n).name]);
@@ -191,15 +194,8 @@ switch lower(PARAMS.COMPUTATIONMETHOD)
                 disp(['Processing ' s]);
                 
                 dog=bungle.phantom;
-                % Scan the phantom
-                % Changed to allow for the Rx beam to be offset from the Tx
-                % beam
-                % Mark 06/15/05
                 
-                % Swapped TX offsets for RX offsets and rolled them into beamset
-                % Pete 2012.11.2
-                
-                [rf,t0]=uf_scan(probe,beamset,dog);
+                [rf,t0]=uf_scan(probe, beamset, dog);
                 
                 if debug_fig
                     show_Bmode
@@ -214,7 +210,7 @@ switch lower(PARAMS.COMPUTATIONMETHOD)
                 t0 = single(t0);
                 
                 % Save the result
-                save(sprintf('%s%03d',OUTPUT_FILE,n),'rf','t0');
+                save(sprintf('%s%03d', OUTPUT_FILE, n), 'rf', 't0');
                 
             end; % matches if isempty(tstep)
         end;
