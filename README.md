@@ -14,7 +14,17 @@ UFFC, 53(7): 1300-1313, 2006.*
 
 Installation
 ============
-
+ * Add the ultratrack repository your Matlab path.  One approach is to add the
+   following to ```$HOME/matlab/startup.m```:
+   ```
+   addpath('PATH/TO/GIT/CLONED/ultratrack');
+   ```
+ * There is a ```probes``` submodule available to restricted institutions.  If
+   you do not have access to that repository, then you can use
+   ```field/linear.m``` and ```field/curvilinear.m``` as starting points to
+   define transducers.  If you do have access, then you can initialize the
+   submodule using ```git submodule init``` followed by ```git submodule
+   update```.
 
 Testing
 =======
