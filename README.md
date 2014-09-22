@@ -1,6 +1,5 @@
 Ultrasonic Tracking Simulation Tools
 ====================================
-
 Field II ultrasonic displacement tracking code using FEM displacement fields.
 The 3D nodal displacement data from the FEM sims are used to translate a volume
 of acoustic scattereres, and synthetic RF data is generated for each time step
@@ -23,11 +22,12 @@ Installation
 
  * There is a ```probes``` submodule available to restricted institutions.  If
    you do not have access to that repository, then you can use
-   ```probe_linear.m``` as starting points to define transducers.  If you do
-   have access, then you can initialize the submodule using:
+   ```probe_linear.m``` as starting points to define transducers.  
+   
+   If you do have access, then you can initialize the submodule using:
    
    + ```git submodule init``` 
-   + ```git submodule update```.  
+   + ```git submodule update```
 
 Testing
 =======
