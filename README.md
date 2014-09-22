@@ -1,6 +1,6 @@
 Ultrasonic Tracking Simulation Tools
 ====================================
-[http://field=ii.dk](Field II) ultrasonic displacement tracking code using FEM
+[Field II](http://field-ii.dk) ultrasonic displacement tracking code using FEM
 displacement fields.  The 3D nodal displacement data from the FEM sims are used
 to translate a volume of acoustic scattereres, and synthetic RF data is
 generated for each time step using the transducer parameters defined in
