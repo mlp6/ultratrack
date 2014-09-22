@@ -37,33 +37,9 @@ function do_dyna_scans(PHANTOM_FILE,OUTPUT_FILE,PARAMS);
 % Mark 06/16/05
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Changed RXOFFSET -> TXOFFSET.
-% Mark 06/17/05
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% converted rf and t0 to single precision variables
-% Mark Palmeri (mark.palmeri@duke.edu)
-% 2009-09-26
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Added PARAMS.TX_F_NUM_Y and PARAMS.RX_F_NUM_Y for elevation dimension
-% F/#s *only* when defining the 2D arrays!!
-% Mark Palmeri
-% 2012-09-10
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Added two new functions for the matrix definitions:
-% def_matrix_enabled 
-% def_active_min_max_ele_ids
-%
-% Commiting v2.5.0 with these additions for the matrix arrays
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v2.6.0
-% Incorporated PARAMS.IMAGE_MODE and mutli-D TX/RX FNUM and TX/RF FOCUS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% v2.6.1
-% Increased ways to specify 1D and Matrix phased array behavior and
-% improved 2- and 3D parallel receive 
-% Peter Hollender
-% 2012-11-2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ADD PATHS FOR CODE AND PROBES
+add_paths;
+
 % BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 debug_fig = 0;
 
