@@ -1,24 +1,27 @@
-function []=sampledriver(phantom_seed)
-% function []=sampledriver(phantom_seed)
+function sampledriver(phantom_seed, nodes, dispdat)
+% function sampledriver(phantom_seed, nodes, dispdat)
 % INPUTS:
 %   phantom_seed (int) - scatterer position RNG seed
+%   nodes (string) - location of nodes.dyn (comma-delimited); must be absolute
+%                    or explicitely relative
+%   dispdat (string) - location of disp.dat (where phantom* results will be
+%                      saved); must be absolute or explicitely relative
+%
 % OUTPUTS:
-%   Nothing returned, but lots of files and directories created in PATH
-
+%   Nothing returned, but lots of files and directories created in the parent
+%   directory of disp.
+%
+% EXAMPLE: sampledriver(0, './nodes.dyn', './disp.dat')
 %% ------------------PHANTOM PARAMETERS----------------------------
-% file containing comma-delimited node data
-DYN_FILE='/SPECIFY_PATH_HERE/nodes.dyn';
-DEST_DIR = pwd;
-DEST_DIR = [DEST_DIR '/'];
-ZDISPFILE = [DEST_DIR 'disp.dat'];
 
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
+generatephantom = 1;
 PPARAMS.xmin=[-0.25];PPARAMS.xmax=[0.25];	% out-of-plane,cm
 PPARAMS.ymin=[-1.5];PPARAMS.ymax=[1.5];	% lateral, cm \
 PPARAMS.zmin=[-2.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!
 PPARAMS.TIMESTEP=[];	% Timesteps to simulate.  Leave empty to
-% simulate all timesteps
+                        % simulate all timesteps
 
 % compute number of scatteres to use
 SCATTERER_DENSITY = 27610; % scatterers/cm^3
@@ -46,6 +49,15 @@ end
 % rigid pre-zdisp-displacement scatterer translation, in the dyna
 % coordinate/unit system to simulate ARFI sequences with multiple runs
 PPARAMS.delta=[0 0 0];
+
+%% MAP DYNA DISPLACEMENTS TO SCATTERER FIELD & GENERATE PHANTOMS 
+PHANTOM_DIR=[make_file_name('phantom', [fileparts(dispdat) '/phantom'], PPARAMS) '/'];
+PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
+d = dir([PHANTOM_FILE '*.mat']);
+if isempty(d) || regeneratephantom
+    mkdir(PHANTOM_DIR);
+    mkphantomfromdyna3(nodes, dispdat, PHANTOM_FILE, PPARAMS);
+end
 
 %%  --------------IMAGING PARAMETERS---------------------------------
 PARAMS.PROBE ='ch4-1';
@@ -181,83 +193,11 @@ else
     
     PARAMS.RXOFFSET =  [PARALLEL_X_OFFSET(:) PARALLEL_Y_OFFSET(:) PARALLEL_TH_OFFSET(:) PARALLEL_PHI_OFFSET(:)];
 end
-%% -------------- DISPLACEMENT TRACKING PARAMETERS --------------
-% 'samtrack','samauto','ncorr','loupas'
-TRACKPARAMS.TRACK_ALG='samtrack';
-TRACKPARAMS.WAVELENGTHS = 1.5; % size of tracking kernel in wavelengths
-%TRACKPARAMS.KERNEL_SAMPLES = 85; % samples
-TRACKPARAMS.KERNEL_SAMPLES = round((PARAMS.field_sample_freq/PARAMS.TX_FREQ)*TRACKPARAMS.WAVELENGTHS);
-
-
-%% ---------------  MAP DYNA DISPLACEMENTS TO SCATTERER FIELD ------------
-P=rmfield(PPARAMS,{'TIMESTEP'});
-if isfield(PPARAMS,'pointscatterers');P = rmfield(P,'pointscatterers');end
-P.X = sprintf('%g_%g',10*P.ymin,10*P.ymax);
-P.Y = sprintf('%g_%g',10*P.xmin,10*P.xmax);
-P.Z = sprintf('%g_%g',-10*P.zmax,-10*P.zmin);
-P = rmfield(P,{'xmin','xmax','ymin','ymax','zmin','zmax'});
-
-PHANTOM_DIR=[make_file_name([DEST_DIR 'phantom'],P) '/'];
-PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
-regeneratephantom = 0;
-d = dir([PHANTOM_FILE '*.mat']);
-if isempty(d) || regeneratephantom
-    mkdir(PHANTOM_DIR);
-    mkphantomfromdyna3(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
-    %mkphantomfromdyna3symmetry(DYN_FILE,ZDISPFILE,PHANTOM_FILE,PPARAMS);
-end
 
 %% ------------- GENERATE RF SCANS OF SCATTERER FIELDS -------------------
-P = rmfield(PARAMS,{'RXOFFSET','BEAM_ORIGIN_X','BEAM_ORIGIN_Y','BEAM_ANGLE_X','BEAM_ANGLE_Y','ULTRATRACK_PATH','FIELD_PATH','COMPUTATIONMETHOD'});
-P.X = sprintf('%g_%g_%g',1e3*P.XMIN,1e3*P.XSTEP,1e3*P.XMAX);
-P.Y = sprintf('%g_%g_%g',1e3*P.YMIN,1e3*P.YSTEP,1e3*P.YMAX);
-P.PHI = sprintf('%g_%g_%g',P.PHIMIN,P.PHISTEP,P.PHIMAX);
-P.THETA = sprintf('%g_%g_%g',P.THMIN,P.THSTEP,P.THMAX);
-P = rmfield(P,{'XMIN','XMAX','XSTEP','YMIN','YMAX','YSTEP','PHIMIN','PHIMAX','PHISTEP','THMIN','THSTEP','THMAX'});
-P.NO_BEAMS = sprintf('%g_%g',P.NO_BEAMS_X,P.NO_BEAMS_Y);
-P = rmfield(P,{'NO_BEAMS_X','NO_BEAMS_Y'});
-P.NPAR = sprintf('%g_%g',P.NO_PARALLEL(1),P.NO_PARALLEL(2));
-P.PSPACE = sprintf('%g_%g',P.PARALLEL_SPACING(1),P.PARALLEL_SPACING(2));
-P = rmfield(P,{'NO_PARALLEL','PARALLEL_SPACING'});
-P.APEX = sprintf('%g',1e3*P.APEX);
-P.TX_FOCUS = sprintf('%g',1e3*P.TX_FOCUS);
-P.TX_FREQ = sprintf('%g',1e-6*P.TX_FREQ);
-P.FS = sprintf('%g',1e-6*P.field_sample_freq);
-P = rmfield(P,'field_sample_freq');
-P.RX_FOCUS = sprintf('%g',1e3*P.RX_FOCUS);
-P.TX_F_NUM = sprintf('%g_%g',P.TX_F_NUM(1),P.TX_F_NUM(2));
-P.RX_F_NUM = sprintf('%g_%g',P.RX_F_NUM(1),P.RX_F_NUM(2));
-P.GRID = sprintf('%g_%g_%g',1e3*P.GRIDSPACING(1),1e3*P.GRIDSPACING(2),1e3*P.GRIDSPACING(3));
-P = rmfield(P,'GRIDSPACING');
-
-RF_DIR=[make_file_name([PHANTOM_DIR 'rf'],P) '/'];
-mkdir(RF_DIR); %matlab 7
+RF_DIR=[make_file_name('rf', [PHANTOM_DIR 'rf'], PARAMS) '/'];
 RF_FILE=[RF_DIR 'rf'];
-
+mkdir(RF_DIR);
 field_init(-1);
-do_dyna_scans(PHANTOM_FILE,RF_FILE,PARAMS);
+do_dyna_scans(PHANTOM_FILE, RF_FILE, PARAMS);
 field_end;
-
-%% TRACK RF
-%TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];
-%mkdir(TRACK_DIR); %matlab 7
-
-%% load all RF into a big matrix
-%n=1;
-
-%while ~isempty(dir(sprintf('%s%03d.mat',RF_FILE,n)))
-%    load(sprintf('%s%03d.mat',RF_FILE,n));
-%    % some rf*.mat files are off by one axial index; allowing for some PARAMS.YSTEPnamic
-%    % assignment of bigRF matrix
-%    % bigRF(:,:,n)=rf;
-%    bigRF(1:size(rf,1),:,n)=rf;
-%    n=n+1;
-%end;
-
-%% track the displacements
-%%[D,C]=estimate_disp(bigRF,TRACKPARAMS.TRACK_ALG,TRACKPARAMS.KERNEL_SAMPLES);
-%[D,C]=estimate_disp(bigRF,TRACKPARAMS);
-
-%% save res_tracksim.mat (same format as experimental res*.mat files)
-%track_save_path = pwd;
-%createtrackres(C,D,PARAMS,PPARAMS,PHANTOM_FILE,RF_FILE,TRACKPARAMS,TRACK_DIR);

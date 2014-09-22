@@ -1,3 +1,10 @@
+%% -------------- DISPLACEMENT TRACKING PARAMETERS --------------
+% 'samtrack','samauto','ncorr','loupas'
+TRACKPARAMS.TRACK_ALG='samtrack';
+TRACKPARAMS.WAVELENGTHS = 1.5; % size of tracking kernel in wavelengths
+%TRACKPARAMS.KERNEL_SAMPLES = 85; % samples
+TRACKPARAMS.KERNEL_SAMPLES = round((PARAMS.field_sample_freq/PARAMS.TX_FREQ)*TRACKPARAMS.WAVELENGTHS);
+
 %TRACK_DIR=[make_file_name([RF_DIR 'track'],TRACKPARAMS) '/'];
 %mkdir(TRACK_DIR); %matlab 7
 
