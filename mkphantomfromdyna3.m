@@ -1,6 +1,5 @@
-function varargout=mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
-%
-% mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
+function varargout = mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
+% function varargout = mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
 %
 % Function for reading .dyn and zdisp files and generating displaced
 % scatterers for Field.  Function saves phantom structures compatible
@@ -36,30 +35,14 @@ function varargout=mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
 %
 %	delta		rigid displacement added to all scatterer positions
 %			before zdisp displacements are applied. A 1x3 vector
-%			in the DYNA coordinate and unit system
-%
-%
-% 11/11/2004 Stephen McAleavey, U. Rochester BME
-% revised 11/17/04
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% brought function name into agreement with its actual filename
-% Mark 03/31/08
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% converted positions and amplitudes to single precision variables
-% Mark Palmeri (mark.palmeri@duke.edu)
-% 2009-09-26
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%			in the DYNA coordinate and unit system	
 
-% BEGIN PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FD_RATIO=0.01;		% What to mutiply dyna units by (cm) to
-% get field units (m), here 100cm*0.01=1m
-
-% END PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FD_RATIO=0.01;  % What to mutiply dyna units by (cm) to
+			    % get field units (m), here 100cm*0.01=1m
 
 % Read the .dyn file to get node positions
 disp(sprintf('Loading %s...',DYN_FILE));
-[nodesAll,X,Y,Z]=read_dot_dyn(DYN_FILE);
+[nodes, X, Y, Z] = read_dot_dyn(DYN_FILE);
 
 % Create scatterers in proscribed volume
 rand('state',PPARAMS.seed); % NEW ON 12/01/04: explicitly seed random generator
@@ -70,8 +53,8 @@ scatterers(:,1)=scatterers(:,1)*(PPARAMS.xmax-PPARAMS.xmin)+PPARAMS.xmin;
 scatterers(:,2)=scatterers(:,2)*(PPARAMS.ymax-PPARAMS.ymin)+PPARAMS.ymin;
 scatterers(:,3)=scatterers(:,3)*(PPARAMS.zmax-PPARAMS.zmin)+PPARAMS.zmin;
 
-% NEW ON 12/01/04: Add rigid displacement to scatterers before shift
-scatterers=scatterers+ones(PPARAMS.N,1)*PPARAMS.delta;
+% add rigid displacement to scatterers before shift
+scatterers = scatterers + ones(PPARAMS.N,1) * PPARAMS.delta;
 
 % MODIFIED to now read in individual time steps from a binary dat file instead
 % of reading all time steps in at once (and using up excessive amounts of RAM).
@@ -82,13 +65,13 @@ scatterers=scatterers+ones(PPARAMS.N,1)*PPARAMS.delta;
 %load(ZDISPFILE);
 %
 if(exist(ZDISPFILE,'file') == 0),
-    error(sprintf('%s does not exist.  Make sure that zdisp.mat files are converted to zdisp.dat .',ZDISPFILE));
-end;
-zdisp_fid = fopen(ZDISPFILE,'r');
+    error(sprintf('%s does not exist.', ZDISPFILE));
+end
+zdisp_fid = fopen(ZDISPFILE, 'r');
 
-NUM_NODES = fread(zdisp_fid,1,'float32');
-NUM_DIMS = fread(zdisp_fid,1,'float32');
-NUM_TIMESTEPS = fread(zdisp_fid,1,'float32');
+NUM_NODES = fread(zdisp_fid, 1, 'float32');
+NUM_DIMS = fread(zdisp_fid, 1, 'float32');
+NUM_TIMESTEPS = fread(zdisp_fid, 1, 'float32');
 
 % Decide on timesteps to use
 %if isempty(PPARAMS.TIMESTEP), PPARAMS.TIMESTEP=1:size(zdisp,3); end;
@@ -105,6 +88,7 @@ for t=PPARAMS.TIMESTEP,
     zdisp_slice = fread(zdisp_fid,NUM_NODES*NUM_DIMS,'float32');
     zdisp_slice = double(reshape(zdisp_slice,NUM_NODES,NUM_DIMS));
     
+    %% NEW STUFF HERE %%
     %Determine the indices of the nodes in the disp.dat file. This is
     %necessary for the next step of reforming the displacements into 3D
     %matrices because it is possible that not all nodes are output in the
@@ -135,9 +119,11 @@ for t=PPARAMS.TIMESTEP,
         end
     end
         
-    %Rearrange the displacement matrix into three 3D matrices corresponding
-    %to x-displacement, y-displacement, and z-displacement
-    [dX,dY,dZ]=reform_zdisp_slice(zdisp_slice,nodes);
+    %% END NEW STUFF %%
+
+    % Rearrange the displacement matrix into three 3D matrices corresponding to
+    % x-displacement, y-displacement, and z-displacement
+    [dX, dY, dZ]=reform_zdisp_slice(zdisp_slice, nodes);
     clear zdisp_slice
     
     if strcmp(PPARAMS.SYM,'q')
@@ -157,12 +143,13 @@ for t=PPARAMS.TIMESTEP,
     end
     
     % Interpolate displacement values
-    sdX = interpn(Xtmp,Ytmp,Ztmp,dX,...
-        scatterers(:,1),scatterers(:,2),scatterers(:,3),'linear');
-    sdY = interpn(Xtmp,Ytmp,Ztmp,dY,...
-        scatterers(:,1),scatterers(:,2),scatterers(:,3),'linear');
-    sdZ = interpn(Xtmp,Ytmp,Ztmp,dZ,...
-        scatterers(:,1),scatterers(:,2),scatterers(:,3),'linear');
+<<<<<<< HEAD
+    sdX = interpn(Xtmp, Ytmp, Ztmp, dX, scatterers(:,1), scatterers(:,2), ...
+                  scatterers(:,3), 'linear');
+    sdY = interpn(Xtmp, Ytmp, Ztmp, dY, scatterers(:,1), scatterers(:,2), ...
+                  scatterers(:,3), 'linear');
+    sdZ = interpn(Xtmp, Ytmp, Ztmp, dZ, scatterers(:,1), scatterers(:,2), ...
+                  scatterers(:,3), 'linear');
     
     %Remove any NaN values from scatterer displacement matrix. NaNs will
     %occur if a scatterers is placed outside of the bounds of the nodal
@@ -171,23 +158,25 @@ for t=PPARAMS.TIMESTEP,
     sdY(isnan(sdY)) = 0;
     sdZ(isnan(sdZ)) = 0;
     
-    % Add displacements to initial scatterer positions
-    % and insert the values in the phantom structure
-    phantom.position=(scatterers+[sdX sdY sdZ])*FD_RATIO;
+    % Add displacements to initial scatterer positions and insert the values in
+    % the phantom structure
+    phantom.position = (scatterers + [sdX sdY sdZ]) * FD_RATIO;
     
-    % Reverse z dimension and swap x and y
-    % to go from dyna-land to field-world
-    phantom.position(:,3)=phantom.position(:,3)*-1;
-    phantom.position=phantom.position(:,[2 1 3]);
+    % Reverse z dimension and swap x and y to go from dyna-land to field-world
+    phantom.position(:,3) = phantom.position(:,3) * -1;
+    phantom.position = phantom.position(:, [2 1 3]);
     
     % Insert amplitudes for scatterers
-    phantom.amplitude=ones(size(scatterers,1),1);
+    % Have uniform amplitude, but can set to something other than 1 (e.g., 0,
+    % to only have point scatteres (below))
+    phantom.amplitude = PPARAMS.rand_scat_amp .* ones(size(scatterers,1),1);
     
     
-    %Include evenly spaced bright scatterers (if requested) (Pete
-    %2012.11.13)
+    %Include evenly spaced bright scatterers (if requested)
     if isfield(PPARAMS,'pointscatterers')
-        [xpos ypos zpos] = ndgrid(PPARAMS.pointscatterers.x,PPARAMS.pointscatterers.y,PPARAMS.pointscatterers.z);
+        [xpos ypos zpos] = ndgrid(PPARAMS.pointscatterers.x, ...
+                                  PPARAMS.pointscatterers.y, ...
+                                  PPARAMS.pointscatterers.z);
         wire_positions = [xpos(:) ypos(:) zpos(:)]; %xyz Scatterer Locations [m]
         wire_amplitudes = PPARAMS.pointscatterers.a*ones(size(wire_positions,1),1);
         phantom.position = [phantom.position; wire_positions];
@@ -197,14 +186,14 @@ for t=PPARAMS.TIMESTEP,
     % convert to single precision
     phantom.position = single(phantom.position);
     phantom.amplitude = single(phantom.amplitude);
-    
-    
-    % Append PPARAMS onto phantom structure
-    phantom.PPARAMS=PPARAMS;
-    
-    % Save phantom to file
-    save(sprintf('%s%03d',OUTPUT_NAME,t), 'phantom')
-end;
+
+	% append PPARAMS onto phantom structure
+	phantom.PPARAMS = PPARAMS;
+
+	% save phantom to file
+    save(sprintf('%s%03d', OUTPUT_NAME, t), 'phantom')
+
+end; % end time loop
 
 fclose(zdisp_fid);
 

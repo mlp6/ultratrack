@@ -1,12 +1,10 @@
 #!/bin/bash
 #
 #$ -S /bin/bash
-##$ -o SCRATCHDIR
-##$ -e SCRATCHDIR
 ##$ -j y
 #$ -V
 #$ -cwd
-##$ -l mem_free=1G
+#$ -l mem_free=MEMORY_LIMITG
 ##$ -l num_proc=4
 #$ -t 1-MAX_INDEX
 #
@@ -14,4 +12,4 @@
 #ulimit -v MEMORY_LIMIT
 
 #sleep $((${SGE_TASK_ID}*2))m
-matlab -nojvm -nodisplay -r "addpath('ULTRATRACK'); FUNCTION_NAME('UNIQUEID.mat',$SGE_TASK_ID)"
+matlab -nodesktop -nosplash -r "FUNCTION_NAME('UNIQUEID.mat',$SGE_TASK_ID)"
