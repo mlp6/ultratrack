@@ -4,7 +4,7 @@ Ultrasonic Tracking Simulation Tools
 displacement fields.  The 3D nodal displacement data from the FEM sims are used
 to translate a volume of acoustic scattereres, and synthetic RF data is
 generated for each time step using the transducer parameters defined in
-[sampledriver.m](sampledriver.m).
+[driver.m](driver.m).
 
 Please considering citing this work if you use this code in your work: 
 
@@ -29,6 +29,13 @@ Installation
    
    + ```git submodule init``` 
    + ```git submodule update```
+
+Usage
+=====
+There are two driver scripts provided to get the ball rolling:
+
+ * [driver.m](driver.m) - 1:1 Tx/Rx example script
+ * [driver_parallel.m](driver_parallel.m) - Parallel Tx/Rx example script
 
 Testing
 =======
