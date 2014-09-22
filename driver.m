@@ -58,7 +58,7 @@ if isempty(d) || generatephantom,
 end
 
 %  --------------IMAGING PARAMETERS---------------------------------
-PARAMS.PROBE ='ch4-1';
+PARAMS.PROBE ='vf10-5';
 PARAMS.COMPUTATIONMETHOD = 'none'; % 'cluster','parfor', or 'none'
 
 % setup some Field II parameters
