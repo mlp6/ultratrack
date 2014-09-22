@@ -52,7 +52,7 @@ PPARAMS.delta=[0 0 0];
 PHANTOM_DIR=[make_file_name('phantom', [fileparts(dispdat) '/phantom'], PPARAMS) '/'];
 PHANTOM_FILE=[PHANTOM_DIR 'phantom'];
 d = dir([PHANTOM_FILE '*.mat']);
-if isempty(d) || regeneratephantom
+if isempty(d) || generatephantom,
     mkdir(PHANTOM_DIR);
     mkphantomfromdyna3(nodes, dispdat, PHANTOM_FILE, PPARAMS);
 end
@@ -65,29 +65,29 @@ PARAMS.COMPUTATIONMETHOD = 'none'; % 'cluster','parfor', or 'none'
 PARAMS.field_sample_freq = 1e9; % Hz
 PARAMS.c = 1540; % sound speed (m/s)
 
-% TRANSMIT BEAM LOCATIONS
-PARAMS.XMIN=    0.5*-3.54e-3;   % Leftmost scan line (m)
-PARAMS.XSTEP =  0*3.54e-3;      % Azimuth step size (m);
-PARAMS.XMAX=    0.5*3.54e-3;	% Rightmost scan line (m)
+% TRACKING BEAM PARAMETERS
+PARAMS.XMIN=    0;              % Leftmost scan line (m)
+PARAMS.XSTEP =  0.1e-3;         % Azimuth step size (m);
+PARAMS.XMAX=    5e-3;	        % Rightmost scan line (m)
 PARAMS.THMIN =  0;              % Leftmost azimuth angle (deg)
-PARAMS.THSTEP = 40;             % Azimuth angle step(deg)
+PARAMS.THSTEP = 0;              % Azimuth angle step(deg)
 PARAMS.THMAX =  0;              % Rightmost azimuth angle (deg)
 PARAMS.PHIMIN= 0;               % Frontmost elevation angle (deg)
 PARAMS.PHISTEP = 0;             % Elevation angle step(deg)
 PARAMS.PHIMAX= 0;               % Backmost elevation angle (deg)
 PARAMS.YMIN=   0;		        % Frontmost scan line (m)
-PARAMS.YSTEP = 0;               % Elevation step size (m);
+PARAMS.YSTEP = 0;               % Elevation step size (m)
 PARAMS.YMAX=   0;	            % Backmost scan line (m)
-PARAMS.APEX = 2*-3.54e-3;       % Apex of scan geometry. Set to 0 for linear scanning.
-PARAMS.TX_FOCUS= 2*-3.54e-3;    % Tramsmit focus depth (m)
-PARAMS.TX_F_NUM=[1 1];          % Transmit f number (the "y" number only used for 2D matrix arrays)
+PARAMS.APEX = 0;                % Apex of scan geometry; 0 for linear scanning
+PARAMS.TX_FOCUS= 20.0e-3;       % Tramsmit focus depth (m)
+PARAMS.TX_F_NUM=[1 1];          % Tx F/# (index 2 only used for 2D matrix arrays)
 PARAMS.TX_FREQ=6.15e6;          % Transmit frequency (Hz)
 PARAMS.TX_NUM_CYCLES=3;         % Number of cycles in transmit toneburst
-PARAMS.RX_FOCUS= 0;             % Depth of receive focus - use 0 for dyn. foc
-PARAMS.RX_F_NUM=[1 1];          % Receive aperture f number (the "y" number only used for 2D matrix arrays)
-PARAMS.RX_GROW_APERTURE=1;
-PARAMS.MINDB = -20;             % Min contribution for including a scat in sensitivity-based reduction
-PARAMS.NO_PARALLEL = [64 1];    %[no_X no_Y]
+PARAMS.RX_FOCUS= 0;             % Depth of receive focus - use 0 for dynamic Rx
+PARAMS.RX_F_NUM=[1 1];          % Rx F/# (index 2 only used for 2D matrix arrays)
+PARAMS.RX_GROW_APERTURE=1;      
+PARAMS.MINDB = -20;             % Min dB to include a scat in reduction
+PARAMS.NO_PARALLEL = [1 1];     % [no_X no_Y]
 PARAMS.PARALLEL_SPACING = [1 1]; % Spread || RX Beams Multiplier [X Y]
 
 %% ---------- AUTOMATICALLY CALCULATED PARAMETERS -------------------
