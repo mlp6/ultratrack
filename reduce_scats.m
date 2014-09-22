@@ -1,5 +1,5 @@
-function [phantom]=reduce_scats_3(phantom, tx, rx, minDB, gridspacing)
-% function [phantom]=reduce_scats_3(phantom, tx, rx, minDB, gridspacing))
+function [phantom]=reduce_scats(phantom, tx, rx, minDB, gridspacing)
+% function [phantom]=reduce_scats(phantom, tx, rx, minDB, gridspacing))
 %
 % Uses a coarse simulated grid of test points to calculate the two-way beam
 % profile, and returns the phantom structure with only the points expected

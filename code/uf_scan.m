@@ -40,7 +40,7 @@ for n_vector=1:beamset.no_beams;
         
             toffset = uf_set_beam(tx, rx, probe, beamset, 1, n_vector, m_vector, p_vector);
 
-            [red_phantom] = reduce_scats_3(phantom, tx, rx);
+            [red_phantom] = reduce_scats(phantom, tx, rx);
             
             [v,t1]=calc_scat(tx, rx, red_phantom.position, red_phantom.amplitude);
             
