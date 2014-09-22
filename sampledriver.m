@@ -5,13 +5,6 @@ function []=sampledriver(phantom_seed)
 % OUTPUTS:
 %   Nothing returned, but lots of files and directories created in PATH
 
-%% ------------ PATH TO URI/FIELD/TRACKING FILES ---------------
-functionDir = fileparts(which(mfilename));
-probesPath = fullfile(functionDir, 'probes/ultratrack');
-check_add_probes(probesPath);
-codePath = fullfile(functionDir, 'code');
-check_add_probes(codePath);
-
 %% ------------------PHANTOM PARAMETERS----------------------------
 % file containing comma-delimited node data
 DYN_FILE='/SPECIFY_PATH_HERE/nodes.dyn';
