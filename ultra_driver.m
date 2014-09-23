@@ -18,15 +18,15 @@ function ultra_driver(phantom_seed, nodes, dispdat)
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
 generatephantom = logical(1);
-PPARAMS.sym = 'q';
-PPARAMS.xmin=[-0.5];PPARAMS.xmax=[0.3];	% out-of-plane,cm
+PPARAMS.sym = 'q'; % 'q', 'h', 'none'
+PPARAMS.xmin=[-0.5];PPARAMS.xmax=[0];	% out-of-plane,cm
 PPARAMS.ymin=[-1.0];PPARAMS.ymax=[1.0];	% lateral, cm \
 PPARAMS.zmin=[-3.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!
 % Timesteps to simulation (leave empty for all FEM timesteps)
 PPARAMS.TIMESTEP=[];
 
 % compute number of scatteres to use
-SCATTERER_DENSITY = 300; % scatterers/cm^3
+SCATTERER_DENSITY = 20000; % scatterers/cm^3
 PPARAMS.N = calc_n_scats(SCATTERER_DENSITY, PPARAMS);
 
 PPARAMS.seed=phantom_seed;         % RNG seed
@@ -39,10 +39,10 @@ PPARAMS.rand_scat_amp = 1;
 USE_POINT_SCATTERERS = logical(0);
 if USE_POINT_SCATTERERS,
     % x, y, z locations and amplitudes of point scatteres (FIELD II coords)
-    PPARAMS.pointscatterers.x = 1e-3 * [-30:4:30]; 
-    PPARAMS.pointscatterers.z = 1e-3 * [2:4:45]; 
-    PPARAMS.pointscatterers.y = 1e-3 * [0]; 
-    PPARAMS.pointscatterers.a = 20;
+    PPARAMS.pointscatterers.x = 1e-3 * [-2:1:2]; 
+    PPARAMS.pointscatterers.z = 1e-3 * [5:1:25]; 
+    PPARAMS.pointscatterers.y = 1e-3 * [-3:1:0]; 
+    PPARAMS.pointscatterers.a = 1;
 end
 
 % rigid pre-zdisp-displacement scatterer translation, in the dyna
@@ -68,8 +68,8 @@ PARAMS.c = 1540; % sound speed (m/s)
 
 % TRACKING BEAM PARAMETERS
 PARAMS.XMIN=    0;              % Leftmost scan line (m)
-PARAMS.XSTEP =  0.1e-3;         % Azimuth step size (m);
-PARAMS.XMAX=    5e-3;	        % Rightmost scan line (m)
+PARAMS.XSTEP =  0;         % Azimuth step size (m);
+PARAMS.XMAX=    0;	        % Rightmost scan line (m)
 PARAMS.THMIN =  0;              % Leftmost azimuth angle (deg)
 PARAMS.THSTEP = 0;              % Azimuth angle step(deg)
 PARAMS.THMAX =  0;              % Rightmost azimuth angle (deg)
@@ -83,11 +83,11 @@ PARAMS.APEX = 0;                % Apex of scan geometry; 0 for linear scanning
 PARAMS.TX_FOCUS= 20.0e-3;       % Tramsmit focus depth (m)
 PARAMS.TX_F_NUM=[1 1];          % Tx F/# (index 2 only used for 2D matrix arrays)
 PARAMS.TX_FREQ=6.15e6;          % Transmit frequency (Hz)
-PARAMS.TX_NUM_CYCLES=3;         % Number of cycles in transmit toneburst
+PARAMS.TX_NUM_CYCLES=2;         % Number of cycles in transmit toneburst
 PARAMS.RX_FOCUS= 0;             % Depth of receive focus - use 0 for dynamic Rx
 PARAMS.RX_F_NUM=[1 1];          % Rx F/# (index 2 only used for 2D matrix arrays)
 PARAMS.RX_GROW_APERTURE=1;      
-PARAMS.MINDB = -20;             % Min dB to include a scat in reduction
+PARAMS.MINDB = NaN;             % Min dB to include a scat in reduction (NaN to disable)
 PARAMS.NO_PARALLEL = [1 1];     % [no_X no_Y]
 PARAMS.PARALLEL_SPACING = [1 1]; % Spread || RX Beams Multiplier [X Y]
 

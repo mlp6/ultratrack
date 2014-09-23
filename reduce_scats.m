@@ -37,66 +37,71 @@ if ~exist('minDB','var')
     minDB = -20;
 end
 
-fprintf('Reducing Scatter Field to %0.0f dB limit...', minDB);
+if isnan(minDB),
+    fprintf('[%s] Skipping scatterer field reduction.', mfilename);
+else,
+    fprintf('Reducing Scatter Field to %0.0f dB limit...', minDB);
 
-latmin = phantom.PPARAMS.ymin*1e-2; % X-Y SWAPPED per DYNA specification
-latmax = phantom.PPARAMS.ymax*1e-2;
-elevmin = phantom.PPARAMS.xmin*1e-2;
-elevmax = phantom.PPARAMS.xmax*1e-2;
-axmin = phantom.PPARAMS.zmin*1e-2;
-axmax = phantom.PPARAMS.zmax*1e-2;
+    latmin = phantom.PPARAMS.ymin*1e-2; % X-Y SWAPPED per DYNA specification
+    latmax = phantom.PPARAMS.ymax*1e-2;
+    elevmin = phantom.PPARAMS.xmin*1e-2;
+    elevmax = phantom.PPARAMS.xmax*1e-2;
+    axmin = phantom.PPARAMS.zmin*1e-2;
+    axmax = phantom.PPARAMS.zmax*1e-2;
 
-x = latmin:gridspacing(1):latmax;
-y = elevmin:gridspacing(2):elevmax;
-z = axmin:gridspacing(3):axmax;
+    x = latmin:gridspacing(1):latmax;
+    y = elevmin:gridspacing(2):elevmax;
+    z = axmin:gridspacing(3):axmax;
 
-% center points on range
-x = x-mean(x) + 0.5*(latmin+latmax);
-y = y-mean(y) + 0.5*(elevmin+elevmax);
-z = z-mean(z) + 0.5*(axmin+axmax);
+    % center points on range
+    x = x-mean(x) + 0.5*(latmin+latmax);
+    y = y-mean(y) + 0.5*(elevmin+elevmax);
+    z = z-mean(z) + 0.5*(axmin+axmax);
 
-[Z X Y] = ndgrid(-1*z,x,y);
-V = 0*X;
-for i = 1:length(X(:));
-[v, starttime] = calc_scat(tx,rx,[X(i) Y(i) Z(i)],1);
-V(i) = sum(abs(hilbert(v))); %A rough estimate of scatterer contribution - probably could be improved
-end
+    [Z X Y] = ndgrid(-1*z,x,y);
+    V = 0*X;
+    for i = 1:length(X(:));
+    [v, starttime] = calc_scat(tx,rx,[X(i) Y(i) Z(i)],1);
+    V(i) = sum(abs(hilbert(v))); %A rough estimate of scatterer contribution - probably could be improved
+    end
 
-V = convn(V,ones(3,3,3)./9,'same');
-V = db(V./max(V(:)));
+    V = convn(V,ones(3,3,3)./9,'same');
+    V = db(V./max(V(:)));
 
- P = [2 1 3];
-   X = permute(X, P);
-   Y = permute(Y, P);
-   Z = permute(Z, P);
-   V = permute(V, P);
+     P = [2 1 3];
+       X = permute(X, P);
+       Y = permute(Y, P);
+       Z = permute(Z, P);
+       V = permute(V, P);
 
-V1 = interp3(Z,X,Y,V,double(phantom.position(:,3)),double(phantom.position(:,1)),double(phantom.position(:,2)),'nearest');
+    V1 = interp3(Z,X,Y,V,double(phantom.position(:,3)),double(phantom.position(:,1)),double(phantom.position(:,2)),'nearest');
 
-keepers = V1>minDB | phantom.amplitude>1;
+    keepers = V1>minDB | phantom.amplitude>1;
 
-fprintf('done (%0.1f%% reduction)\n', 100*(1-length(keepers)/length(phantom.amplitude)));
+    fprintf('done (%0.1f%% reduction)\n', 100*(1-length(keepers)/length(phantom.amplitude)));
 
-if debug_fig
-    figure(5);
-    cla
-    plot3(1e3*phantom.position(:,1),1e3*phantom.position(:,2),1e3*phantom.position(:,3),'r.','Markersize',1)
-end
+    if debug_fig
+        figure(5);
+        cla
+        plot3(1e3*phantom.position(:,1),1e3*phantom.position(:,2),1e3*phantom.position(:,3),'r.','Markersize',1)
+    end
 
-phantom.position = phantom.position(keepers,:);
-phantom.amplitude = phantom.amplitude(keepers,:);
+    phantom.position = phantom.position(keepers,:);
+    phantom.amplitude = phantom.amplitude(keepers,:);
 
-if debug_fig
-    hold on
-    plot3(1e3*(phantom.position(:,1)),...
-        1e3*phantom.position(:,2),...
-        1e3*phantom.position(:,3),'b.')
-    xlabel('x (mm)')
-    ylabel('y (mm)')
-    zlabel('z (mm)')
-    axis equal
-    axis ij
-    axis(1e3*[latmin latmax elevmin elevmax -1*axmax -1*axmin]);
-    drawnow
-    hold off
+    if debug_fig
+        hold on
+        plot3(1e3*(phantom.position(:,1)),...
+            1e3*phantom.position(:,2),...
+            1e3*phantom.position(:,3),'b.')
+        xlabel('x (mm)')
+        ylabel('y (mm)')
+        zlabel('z (mm)')
+        axis equal
+        axis ij
+        axis(1e3*[latmin latmax elevmin elevmax -1*axmax -1*axmin]);
+        drawnow
+        hold off
+    end
+
 end
