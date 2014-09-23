@@ -1,15 +1,27 @@
-function [envSNR]=CalcSpeckleSNR
+function [envSNR]=CalcSpeckleSNR(rfmat, axMinIndex, axMaxIndex)
 % function [envSNR]=CalcSpeckleSNR
-% calculate the speckle SNR for our typicaly VF10-5
-% configuration (foc 20 mm, F/1, 7 MHz)
 %
-% Mark 01/07/05
+% Really crude script to calculate the SNR from rf001.mat at user-specific
+% axial indices (around the focus), averaged over all lateral lines that exist.
+% If you are expecting elegant code, then look elsewhere!
+%
+% INPUTS:   rfmat (string) - RF data matlab file (e.g., 'rf001.mat') 
+%           axMinIndex (int) - raw rf001.mat axial index (min)
+%           axMaxIndex (int)
+%
+% OUTPUTS:  envSNR (int) - raw SNR of the envelope-detected data
+%
+% EXAMPLE: [speckle_snr] = CalcSpeckleSNR('rf001.mat', 2500, 2750);
+%
 
-load rf001.mat
-env = abs(hilbert(rf(2482:2715,:)));
-for i=1:size(rf,2),
+load(rfmat);
+
+env = abs(hilbert(rf(axMinIndex:axMaxIndex,:)));
+
+for i = 1:size(rf,2),
 	envmean(i) = mean(env(:,i));
 	envstd(i) = std(env(:,i));
 	envSNRa(i) = envmean(i)/envstd(i);
 end;
-envSNR=mean(envSNRa);
+
+envSNR = mean(envSNRa);
