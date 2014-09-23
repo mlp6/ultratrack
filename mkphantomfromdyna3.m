@@ -1,5 +1,5 @@
-function varargout = mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
-% function varargout = mkphantomfromdyna3(DYN_FILE,ZDISPFILE,OUTPUT_NAME,PPARAMS);
+function varargout = mkphantomfromdyna3(DYN_FILE, ZDISPFILE, OUTPUT_NAME, PPARAMS);
+% function varargout = mkphantomfromdyna3(DYN_FILE, ZDISPFILE, OUTPUT_NAME, PPARAMS);
 %
 % Function for reading .dyn and zdisp files and generating displaced
 % scatterers for Field.  Function saves phantom structures compatible
@@ -42,40 +42,33 @@ FD_RATIO=0.01;  % What to mutiply dyna units by (cm) to
 
 % Read the .dyn file to get node positions
 disp(sprintf('Loading %s...',DYN_FILE));
-[nodesAll, X, Y, Z] = read_dot_dyn(DYN_FILE);
+[nodes, X, Y, Z] = read_dot_dyn(DYN_FILE);
 
-% Create scatterers in proscribed volume
-rand('state',PPARAMS.seed); % NEW ON 12/01/04: explicitly seed random generator
-% to ensure identical scatterer location
-% if desired
+% Create scatterers in specified volume with explicitly seeded random generator
+% to ensure identical scatterer location in subsequent runs if needed
+rand('state',PPARAMS.seed); 
 scatterers=rand(PPARAMS.N,3);
-scatterers(:,1)=scatterers(:,1)*(PPARAMS.xmax-PPARAMS.xmin)+PPARAMS.xmin;
-scatterers(:,2)=scatterers(:,2)*(PPARAMS.ymax-PPARAMS.ymin)+PPARAMS.ymin;
-scatterers(:,3)=scatterers(:,3)*(PPARAMS.zmax-PPARAMS.zmin)+PPARAMS.zmin;
+scatterers(:,1) = scatterers(:,1) * (PPARAMS.xmax - PPARAMS.xmin) + PPARAMS.xmin;
+scatterers(:,2) = scatterers(:,2) * (PPARAMS.ymax - PPARAMS.ymin) + PPARAMS.ymin;
+scatterers(:,3) = scatterers(:,3) * (PPARAMS.zmax - PPARAMS.zmin) + PPARAMS.zmin;
 
 % add rigid displacement to scatterers before shift
-scatterers = scatterers + ones(PPARAMS.N,1) * PPARAMS.delta;
+scatterers = scatterers + (ones(PPARAMS.N,1) * PPARAMS.delta);
 
-% MODIFIED to now read in individual time steps from a binary dat file instead
-% of reading all time steps in at once (and using up excessive amounts of RAM).
-% Old zdisp.mat files can be converted using convert_zdisp_dat.m .
-%
-% Load zdisp file;
-%disp('Loading zdisp...');
-%load(ZDISPFILE);
-%
-if(exist(ZDISPFILE,'file') == 0),
+if(exist(ZDISPFILE, 'file') == 0),
     error(sprintf('%s does not exist.', ZDISPFILE));
+else
+    zdisp_fid = fopen(ZDISPFILE, 'r');
 end
-zdisp_fid = fopen(ZDISPFILE, 'r');
 
 NUM_NODES = fread(zdisp_fid, 1, 'float32');
 NUM_DIMS = fread(zdisp_fid, 1, 'float32');
 NUM_TIMESTEPS = fread(zdisp_fid, 1, 'float32');
 
 % Decide on timesteps to use
-%if isempty(PPARAMS.TIMESTEP), PPARAMS.TIMESTEP=1:size(zdisp,3); end;
-if isempty(PPARAMS.TIMESTEP), PPARAMS.TIMESTEP=1:NUM_TIMESTEPS; end;
+if isempty(PPARAMS.TIMESTEP), 
+    PPARAMS.TIMESTEP=1:NUM_TIMESTEPS; 
+end
 
 % Generate displaced scatterers for each timestep
 for t=PPARAMS.TIMESTEP,
@@ -88,67 +81,31 @@ for t=PPARAMS.TIMESTEP,
     zdisp_slice = fread(zdisp_fid,NUM_NODES*NUM_DIMS,'float32');
     zdisp_slice = double(reshape(zdisp_slice,NUM_NODES,NUM_DIMS));
     
-    % Determine the indices of the nodes in the disp.dat file. This is
-    % necessary for the next step of reforming the displacements into 3D
-    % matrices because it is possible that not all nodes are output in the
-    % NODOUT file (e.g. when using a PML)
-    if t == PPARAMS.TIMESTEP(1)
-        % Only need to do this on the first iteration of the loop because the
-        % nodal positions don't change
-        [i, j, k] = ind2sub(size(nodesAll), zdisp_slice(:,1));
-        xRange = min(i):max(i);
-        yRange = min(j):max(j);
-        zRange = min(k):max(k);
-        Xtmp = X(xRange, yRange, zRange);
-        Ytmp = Y(xRange, yRange, zRange);
-        Ztmp = Z(xRange, yRange, zRange);
-        nodes = nodesAll(xRange, yRange, zRange);
-        
-        switch PPARAMS.sym
-            case 'q'
-                Xtmp = cat(1, Xtmp, -flipdim(Xtmp(1:end-1,:,:), 1));
-                Xtmp = cat(2, flipdim(Xtmp(:,2:end,:), 2), Xtmp);
-                
-                Ytmp = cat(2, -flipdim(Ytmp(:,2:end,:), 2), Ytmp);
-                Ytmp = cat(1, Ytmp, flipdim(Ytmp(1:end-1,:,:), 1));
-                
-                Ztmp = cat(1, Ztmp, flipdim(Ztmp(1:end-1,:,:), 1));
-                Ztmp = cat(2, flipdim(Ztmp(:,2:end,:),2), Ztmp);
-            case 'h'
-                error('Half symmetry not implemented yet.');
-        end
+    if (strcmp(PPARAMS.sym, 'q') | strcmp(PPARAMS.sym, 'h')) & ...
+       (t == PPARAMS.TIMESTEP(1)),
+        [X, Y, Z] = reflect_node_coord_disp('coord', PPARAMS.sym, X, Y, Z);
     end
         
     % Rearrange the displacement matrix into three 3D matrices corresponding to
     % x-displacement, y-displacement, and z-displacement
-    [dX, dY, dZ]=reform_zdisp_slice(zdisp_slice, nodes);
+    [dX, dY, dZ] = reform_zdisp_slice(zdisp_slice, nodes);
     clear zdisp_slice
     
-    switch PPARAMS.sym
-        case 'q'
-            dX = cat(1, dX, flipdim(dX(1:end-1,:,:), 1));
-            dX = cat(2, flipdim(dX(:,2:end,:), 2), dX);
-            
-            dY = cat(1, dY, flipdim(dY(1:end-1,:,:), 1));
-            dY = cat(2, flipdim(dY(:,2:end,:),2), dY);
-            
-            dZ = cat(1, dZ, flipdim(dZ(1:end-1,:,:), 1));
-            dZ = cat(2, flipdim(dZ(:,2:end,:),2), dZ);
-        case 'h'
-            error('Half symmetry not implemented yet.');
+    if (strcmp(PPARAMS.sym, 'q') | strcmp(PPARAMS.sym, 'h')),
+        [dX, dY, dZ] = reflect_node_coord_disp('disp', PPARAMS.sym, dX, dY, dZ);
     end
     
     % Interpolate displacement values
-    sdX = interpn(Xtmp, Ytmp, Ztmp, dX, scatterers(:,1), scatterers(:,2), ...
+    sdX = interpn(X, Y, Z, dX, scatterers(:,1), scatterers(:,2), ...
                   scatterers(:,3), 'linear');
-    sdY = interpn(Xtmp, Ytmp, Ztmp, dY, scatterers(:,1), scatterers(:,2), ...
+    sdY = interpn(X, Y, Z, dY, scatterers(:,1), scatterers(:,2), ...
                   scatterers(:,3), 'linear');
-    sdZ = interpn(Xtmp, Ytmp, Ztmp, dZ, scatterers(:,1), scatterers(:,2), ...
+    sdZ = interpn(X, Y, Z, dZ, scatterers(:,1), scatterers(:,2), ...
                   scatterers(:,3), 'linear');
     
-    %Remove any NaN values from scatterer displacement matrix. NaNs will
-    %occur if a scatterers is placed outside of the bounds of the nodal
-    %displacement matrix that is passed in.
+    % Remove any NaN values from scatterer displacement matrix. NaNs will
+    % occur if a scatterers is placed outside of the bounds of the nodal
+    % displacement matrix that is passed in.
     sdX(isnan(sdX)) = 0;
     sdY(isnan(sdY)) = 0;
     sdZ(isnan(sdZ)) = 0;
