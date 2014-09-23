@@ -88,6 +88,10 @@ PARAMS.RX_FOCUS= 0;             % Depth of receive focus - use 0 for dynamic Rx
 PARAMS.RX_F_NUM=[1 1];          % Rx F/# (index 2 only used for 2D matrix arrays)
 PARAMS.RX_GROW_APERTURE=1;      
 PARAMS.MINDB = -20;             % Min dB to include a scat in reduction
+PARAMS.NO_PARALLEL = [1 1];     % [no_X no_Y]
+PARAMS.PARALLEL_SPACING = [1 1]; % Spread || RX Beams Multiplier [X Y]
+
+PARAMS = parallel_tx_rx(0, 0, PARAMS); % Tx & Rx beam override possible with 1s
 
 %% ------------- GENERATE RF SCANS OF SCATTERER FIELDS -------------------
 RF_DIR=[make_file_name('rf', [PHANTOM_DIR 'rf'], PARAMS) '/'];
