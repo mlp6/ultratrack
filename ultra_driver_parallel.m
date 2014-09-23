@@ -1,5 +1,5 @@
-function driver_parallel(phantom_seed, nodes, dispdat)
-% function driver_parallel(phantom_seed, nodes, dispdat)
+function ultra_driver_parallel(phantom_seed, nodes, dispdat)
+% function ultra_driver_parallel(phantom_seed, nodes, dispdat)
 % INPUTS:
 %   phantom_seed (int) - scatterer position RNG seed
 %   nodes (string) - location of nodes.dyn (comma-delimited); must be absolute
