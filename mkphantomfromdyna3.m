@@ -46,7 +46,7 @@ disp(sprintf('Loading %s...',DYN_FILE));
 
 % Create scatterers in specified volume with explicitly seeded random generator
 % to ensure identical scatterer location in subsequent runs if needed
-rand('state',PPARAMS.seed); 
+rnd(PPARAMS.seed);
 scatterers=rand(PPARAMS.N,3);
 scatterers(:,1) = scatterers(:,1) * (PPARAMS.xmax - PPARAMS.xmin) + PPARAMS.xmin;
 scatterers(:,2) = scatterers(:,2) * (PPARAMS.ymax - PPARAMS.ymin) + PPARAMS.ymin;
