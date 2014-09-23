@@ -19,14 +19,14 @@ function ultra_driver(phantom_seed, nodes, dispdat)
 % leave any empty to use mesh limit
 generatephantom = logical(1);
 PPARAMS.sym = 'q';
-PPARAMS.xmin=[-0.25];PPARAMS.xmax=[0.25];	% out-of-plane,cm
-PPARAMS.ymin=[-1.5];PPARAMS.ymax=[1.5];	% lateral, cm \
-PPARAMS.zmin=[-2.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!
+PPARAMS.xmin=[-0.5];PPARAMS.xmax=[0.3];	% out-of-plane,cm
+PPARAMS.ymin=[-1.0];PPARAMS.ymax=[1.0];	% lateral, cm \
+PPARAMS.zmin=[-3.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!
 % Timesteps to simulation (leave empty for all FEM timesteps)
 PPARAMS.TIMESTEP=[];
 
 % compute number of scatteres to use
-SCATTERER_DENSITY = 30000; % scatterers/cm^3
+SCATTERER_DENSITY = 300; % scatterers/cm^3
 PPARAMS.N = calc_n_scats(SCATTERER_DENSITY, PPARAMS);
 
 PPARAMS.seed=phantom_seed;         % RNG seed
