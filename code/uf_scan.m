@@ -40,7 +40,7 @@ for n_vector=1:beamset.no_beams;
         
             toffset = uf_set_beam(tx, rx, probe, beamset, 1, n_vector, m_vector, p_vector);
 
-            [red_phantom] = reduce_scats(phantom, tx, rx);
+            [red_phantom] = reduce_scats(phantom, tx, rx, beamset.minDB);
             
             [v,t1]=calc_scat(tx, rx, red_phantom.position, red_phantom.amplitude);
             
@@ -57,8 +57,6 @@ for n_vector=1:beamset.no_beams;
         end;
     end;
 end
-
-whos rfdata
 
 % Create rf with equal t0s from rfdata
 [rf,t0]=uf_time_eq(rfdata,start_times,probe.field_sample_freq);

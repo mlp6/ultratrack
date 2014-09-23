@@ -123,7 +123,6 @@ beamset.no_parallel = size(RXOFFSET,1);
 beamset.rx_offset = RXOFFSET;
 
 beamset.minDB = MINDB;
-beamset.gridspacing = GRIDSPACING;
 
 % beamset.steering_anglex=zeros(size(beamset.originx))'; Deprecated? doesn't grep in the codebase pjh7
 % beamset.steering_angley=zeros(size(beamset.originy))';
@@ -146,9 +145,6 @@ phantom_files=dir([PHANTOM_FILE '*']);
 if isempty(phantom_files),
     error('No phantom files found matching name given');
 end;
-
-ULTRATRACK_PATH = PARAMS.ULTRATRACK_PATH;
-FIELD_PATH = PARAMS.FIELD_PATH;
 
 switch lower(PARAMS.COMPUTATIONMETHOD)
     case 'cluster'
