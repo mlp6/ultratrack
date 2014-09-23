@@ -1,5 +1,5 @@
-function driver(phantom_seed, nodes, dispdat)
-% function driver(phantom_seed, nodes, dispdat)
+function ultra_driver(phantom_seed, nodes, dispdat)
+% function ultra_driver(phantom_seed, nodes, dispdat)
 % INPUTS:
 %   phantom_seed (int) - scatterer position RNG seed
 %   nodes (string) - location of nodes.dyn (comma-delimited); must be absolute
@@ -18,7 +18,7 @@ function driver(phantom_seed, nodes, dispdat)
 % setup phantom parameters (PPARAMS)
 % leave any empty to use mesh limit
 generatephantom = logical(1);
-PPARAMS.SYM = 'q';
+PPARAMS.sym = 'q';
 PPARAMS.xmin=[-0.25];PPARAMS.xmax=[0.25];	% out-of-plane,cm
 PPARAMS.ymin=[-1.5];PPARAMS.ymax=[1.5];	% lateral, cm \
 PPARAMS.zmin=[-2.0];PPARAMS.zmax=[-0.1];% axial, cm   / X,Y SWAPPED vs FIELD!
