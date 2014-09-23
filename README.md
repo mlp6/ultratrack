@@ -32,10 +32,8 @@ Installation
 
 Usage
 =====
-There are two driver scripts provided to get the ball rolling:
-
- * [driver.m](driver.m) - 1:1 Tx/Rx example script
- * [driver_parallel.m](driver_parallel.m) - Parallel Tx/Rx example script
+[ultra_driver.m](ultra_driver.m) is an example driver script for 1:1 scanning
+with a linear array.
 
 Testing
 =======
