@@ -41,7 +41,7 @@ switch sym
     case 'h'
         % flip in elevation (x, dim 1)
         % x should go neg -> 0, so leave out last entry
-        Xr = cat(1, X, inv_sgn*flipdim(X(1:end-1,:,:), 1));
+        Xr = cat(1, X, inv_sign*flipdim(X(1:end-1,:,:), 1));
         Yr = cat(1, Y, Y(1:end-1,:,:));
         Zr = cat(1, Z, Z(1:end-1,:,:));
     case 'q'
