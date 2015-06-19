@@ -47,8 +47,8 @@ switch sym
     case 'q'
         % flip in elevation first (just like 'h')
         Xr = cat(1, X, inv_sign*flipdim(X(1:end-1,:,:), 1));
-        Yr = cat(1, Y, Y(1:end-1,:,:));
-        Zr = cat(1, Z, Z(1:end-1,:,:));
+        Yr = cat(1, Y, flipdim(Y(1:end-1,:,:),1));
+        Zr = cat(1, Z, flipdim(Z(1:end-1,:,:),1));
 
         % now flip laterally (y, dim 2)
         % y should go 0 -> pos, so leave out first entry
