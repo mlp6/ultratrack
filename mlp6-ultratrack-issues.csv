@@ -1,0 +1,77 @@
+id,Title,Body,Created At,Updated At
+22,scat amplitude,"Scat amp
+
+All I did for this was change the call that sets phantom.amplitude to randn() and pulled it outside of the for loop so that it only happens once in the script. I’ve been running sims with a large scatterer mesh (~2 million scatterers) and as far as I can tell it seems to work (the RF lines look fine and motion tracking with NCC works as expected). The mean of the RF lines is somewhere around -1.7e-26, which I assume is so small that it can be counted as zero-mean (although Doug will probably have to double check this). Not sure what could be going on with your calc_scat, we are using the older version of Field so maybe some bug was introduced further down the line? Here is the call:
+
+% Insert amplitudes for scatterers
+
+phantom.amplitude = randn(PPARAMS.N,1);",2015-02-19T02:19:50Z,2015-02-19T02:19:50Z
+21,non-plaid,"Non-plaid mesh
+==============
+
+This change was a little more involved (no MEX file unfortunately, just
+straight Matlab). Basically, there are 2 kinds of interpolant classes in
+matlab, griddedInterpolant and scatteredInterpolant. The gridded version is the
+one that interpn() uses and requires the matrix to be plaid, etc. The scattered
+version is the one that griddata() uses, which I think is confusingly named
+since you don’t need a grid. What’s nice with the scatteredInterpolant is that
+you just pass in XYZ coordinates and the value at each coordinate, and it
+figures out the interpolant from there. So basically, in the read_dot_dyn
+function, you can remove all that meshgrid stuff that happens after the
+textscan, and just pipe the 4 vectors (X,Y,Z, Val) directly into the
+interpolation function. I chose to implement this approach using the
+scatteredInterpolant() rather than griddata(), but either could work.
+
+
+
+Outside for-loop
+================
+```
+%Predefine interpolants for X Y and Z displacement data
+
+Fx = scatteredInterpolant(nodes(:,2),nodes(:,3),nodes(:,4),zeros(size(nodes,1),1));
+Fy = scatteredInterpolant(nodes(:,2),nodes(:,3),nodes(:,4),zeros(size(nodes,1),1));
+Fz = scatteredInterpolant(nodes(:,2),nodes(:,3),nodes(:,4),zeros(size(nodes,1),1));
+```
+
+
+Inside for-loop
+===============
+```
+%Update the X Y and Z displacement values in the interpolants from disp.dat slice
+
+Fx.Values = zdisp_slice(:,2);
+Fy.Values = zdisp_slice(:,3);
+Fz.Values = zdisp_slice(:,4);
+
+ %Perform interpolation of arbitrary scatterer point
+
+ sdX = Fx(scatterers(:,1), scatterers(:,2), scatterers(:,3));
+sdY = Fy(scatterers(:,1), scatterers(:,2), scatterers(:,3));
+sdZ = Fz(scatterers(:,1), scatterers(:,2), scatterers(:,3));
+
+ % Add displacements to initial scatterer positions
+% and insert the values in the phantom structure
+
+phantom.position=(scatterers+[sdX sdY sdZ])*FD_RATIO;
+",2015-02-19T02:14:46Z,2015-02-19T02:14:46Z
+20,mutlitrow support,Probes like the 9L4 and 14L5 that have multiple rows are not appropriately taken into account in ultratrack (they are in fem).  Need to re-work several things to accommodate the this probe definition.,2014-11-10T15:44:05Z,2014-11-10T15:44:05Z
+15,consolidate tracking code / integrate with external packages,"still have pieces of code from Kasai, Stephen's implementation of NXCorr, etc.; would be great to integrate with some ""glue"" to ProcessArfiData (Rouze)",2014-09-23T16:22:30Z,2014-09-23T16:22:30Z
+14,Non-zero mean RF data,Doug and I have seen issues w/ RF data that is non-zero mean; could this be related to using all 1 amplitude scatterers.  Jorgen recommends using a zero-mean normal distribution for amplitudes.  Need to test this with datasets that Doug has highlighted as problematic.,2014-09-09T12:44:19Z,2014-09-09T12:44:19Z
+12,elevation lens -> axial offset,"do we take this into account?
+
+xdc_get(Th) -> 26th row is z position of element to compensate",2014-06-19T14:28:18Z,2014-09-25T03:50:07Z
+12,elevation lens -> axial offset,"do we take this into account?
+
+xdc_get(Th) -> 26th row is z position of element to compensate",2014-06-19T14:28:18Z,2014-09-25T03:50:07Z
+11,scat / res cell,Tomek has feature added,2014-06-19T14:22:30Z,2014-09-25T03:50:07Z
+8,probes -> objects,"define a probe class to utilize Matlab objects for probe definitions **and** methods for calculating probe-specific parameters
+
+this will help a lot w/ error checking w/i probes and moving to 3D imaging",2014-02-24T19:43:05Z,2014-02-24T19:43:09Z
+6,if_make_xdc: geometry.txoffset,why is txoffset in the curvilinear definition and not the linear/phased/matrix definitions?,2013-09-18T04:20:20Z,2013-09-18T04:20:20Z
+5,RF -> IQ,"would be nice to have code that will demodulate the RF data to IQ, to test IQ displacement estimation code",2013-09-05T19:25:27Z,2013-09-05T19:25:27Z
+4,integrate the ProcessArfiData displacement estimation,"currently uses *old* samtrack algorithms
+
+needs to be updated to what we use for experimental RF data!!",2013-09-05T19:24:46Z,2014-09-23T17:54:09Z
+3,create test cases,"Need some phantom, RF and displacement estimated data to be able to regenerate and validate against.",2013-08-29T02:26:51Z,2013-08-29T02:26:51Z
+1,experimentally-measurement impulse response,The FEM code allows for experimentally-measured impulse responses to be used instead of modulated Guassian waveforms; would like to add this functionality to the tracking code too!,2013-08-26T21:25:07Z,2013-08-26T21:25:07Z
