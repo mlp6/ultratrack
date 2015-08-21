@@ -21,9 +21,9 @@ Installation
    addpath('PATH/TO/GIT/CLONED/ultratrack');
    ```
 
- * There is a ```probes``` submodule available to restricted institutions.  If
-   you do not have access to that repository, then you can use
-   [probe_linear.m](probe_linear.m) as starting points to define transducers.  
+* Siemens proprietary probe definitions can be cloned from the
+  access-restricted repository: https://gitlab.oit.duke.edu/ultrasound/probes
+
    
    If you do have access, then you can initialize the submodule using:
    
