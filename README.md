@@ -6,7 +6,7 @@ to translate a volume of acoustic scattereres, and synthetic RF data is
 generated for each time step using the transducer parameters defined in
 [driver.m](driver.m).
 
-Please considering citing this work if you use this code in your work: 
+Please consider citing this work if you use this code in your work: 
 
 [Palmeri ML, McAleavey SA, Trahey GE, Nightingale KR. "Ultrasonic Tracking of
 Acoustic Radiation Force-Induced Displacements in Homogeneous Media," IEEE
