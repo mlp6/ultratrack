@@ -38,9 +38,9 @@ if ~exist('minDB','var')
 end
 
 if isnan(minDB),
-    fprintf('[%s] Skipping scatterer field reduction.', mfilename);
+    fprintf('[%s] Skipping scatterer field reduction.\n', mfilename);
 else,
-    fprintf('Reducing Scatter Field to %0.0f dB limit...', minDB);
+    fprintf('Reducing Scatter Field to %0.0f dB limit.\n', minDB);
 
     latmin = phantom.PPARAMS.ymin*1e-2; % X-Y SWAPPED per DYNA specification
     latmax = phantom.PPARAMS.ymax*1e-2;
