@@ -207,8 +207,8 @@ for n=1:512,
     % check to see if no elements are on, and if so, at least turn the center
     % element on
     if ~any(rx_apodization(n,:))
-        warning(['WARNING: No elements in the apodized Rx aperture weighted on, '...
-                 'so center element turned on.'])
+        warning(['No elements in the apodized Rx aperture weighted on; '...
+                 'center element turned on.'])
         center_element = floor(size(rx_apodization,2));
         rx_apodization(n,center_element) = 1;
     end
