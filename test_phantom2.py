@@ -1,7 +1,7 @@
-# Test cases to test phantom2.py
-
-import numpy as np
-from phantom2 import my_interpn
+def main():
+    test_1()
+    test_2()
+    test_3()
 
 
 def f1(x, y, z):
@@ -20,6 +20,8 @@ def f3(x, y, z):
 
 
 def test_1():
+    import numpy as np
+    from phantom2 import my_interpn
     x = np.linspace(-2, 2, 5)
     y = np.linspace(-2, 2, 5)
     z = np.linspace(-2, 2, 5)
@@ -31,9 +33,11 @@ def test_1():
     assert my_interpn(x, y, z, data, pts)[0] == 0
     assert my_interpn(x, y, z, data, pts)[1] == 0
     assert my_interpn(x, y, z, data, pts)[2] == 0
-    print("Test1 pass")
+
 
 def test_2():
+    import numpy as np
+    from phantom2 import my_interpn
     x = np.linspace(-2, 2, 5)
     y = np.linspace(-2, 2, 5)
     z = np.linspace(-2, 2, 5)
@@ -45,10 +49,11 @@ def test_2():
     assert my_interpn(x, y, z, data, pts)[0] == 1
     assert my_interpn(x, y, z, data, pts)[1] == 1
     assert my_interpn(x, y, z, data, pts)[2] == 1
-    print("Test2 pass")
 
 
 def test_3():
+    import numpy as np
+    from phantom2 import my_interpn
     x = np.linspace(-2, 100, 5)
     y = np.linspace(-2, 2, 5)
     z = np.linspace(-2, 2, 5)
@@ -60,8 +65,7 @@ def test_3():
     assert my_interpn(x, y, z, data, pts)[0] == 1
     assert my_interpn(x, y, z, data, pts)[1] == 1.5
     assert my_interpn(x, y, z, data, pts)[2] == 0.5
-    print("Test3 pass")
 
-test_1()
-test_2()
-test_3()
+
+if __name__ == "__main__":
+    main()
