@@ -1,7 +1,7 @@
 def main():
-    test_1()
-    test_2()
-    test_3()
+    test_zerotest()
+    test_onestest()
+    test_lineartest()
 
 
 def f1(x, y, z):
@@ -19,7 +19,7 @@ def f3(x, y, z):
     return x + y + z
 
 
-def test_1():
+def test_zerotest():
     import numpy as np
     from phantom2 import my_interpn
     x = np.linspace(-2, 2, 5)
@@ -35,7 +35,7 @@ def test_1():
     assert my_interpn(x, y, z, data, pts)[2] == 0
 
 
-def test_2():
+def test_onestest():
     import numpy as np
     from phantom2 import my_interpn
     x = np.linspace(-2, 2, 5)
@@ -51,7 +51,7 @@ def test_2():
     assert my_interpn(x, y, z, data, pts)[2] == 1
 
 
-def test_3():
+def test_lineartest():
     import numpy as np
     from phantom2 import my_interpn
     x = np.linspace(-2, 100, 5)
