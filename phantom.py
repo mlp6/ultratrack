@@ -1,7 +1,10 @@
+import numpy as np
+
 def main(timesteps):
-    for t in timesteps:
-        p = Phantom()
-        p.save_phantom()
+    #for t in timesteps:
+    p = Phantom()
+    p.calc_n_scats()
+    pass
 
 
 class Phantom:
@@ -38,10 +41,11 @@ class Phantom:
         self.rng_seed = rng_seed
         self.delta_xyz = delta_xyz
 
-        self.load_nodeIDcoords()
-        self.read_dispdat_header()
-        self.create_scatterers()
-        self.rigid_translate_scatterers()
+        #self.load_nodeIDcoords()
+        #self.read_dispdat_header()
+        #self.calc_n_scats()
+        #self.create_scatterers()
+        #self.rigid_translate_scatterers()
 
 
     def load_nodeIDcoords(self):
@@ -71,21 +75,43 @@ class Phantom:
 
         self.dispdat_header = read_header(self.dispdatfile)
 
+    def calc_n_scats(self):
+        """" N (int) - number of scatterers in the model volume"""
+        # Deal with None case in phantom bounds still!
+
+        trackingvolume = np.abs(self.phantom_bounds[0][1] - self.phantom_bounds[0][0]) *\
+            np.abs(self.phantom_bounds[1][1] - self.phantom_bounds[1][0]) *\
+            np.abs(self.phantom_bounds[2][1] - self.phantom_bounds[2][0])
+
+        return np.round(trackingvolume*self.scat_density , decimals = 6)
+
 
     def create_scatterers(self):
-        """create scatterrers within phantom_bounds using explicitly-seeded RNG
-
+        """
+        create scatterrers within phantom_bounds using explicitly-seeded RNG
         Using the explicit RNG seed ensures identical scatterer location in subsequent runs if needed.
+        """
+        # Deal with None case in phantom bounds still!
 
+        np.random.seed(self.rng_seed)
+        scatterers = np.random.random((self.calc_n_scats(), 3))
 
+        scatterers[:, 0] = scatterers[:, 0] * (self.phantom_bounds[0][1] - self.phantom_bounds[0][0]) + \
+            self.phantom_bounds[0][0]
+        scatterers[:, 1] = scatterers[:, 1] * (self.phantom_bounds[1][1] - self.phantom_bounds[1][0]) + \
+            self.phantom_bounds[0][0]
+        scatterers[:, 2] = scatterers[:, 2] * (self.phantom_bounds[2][1] - self.phantom_bounds[2][0]) + \
+            self.phantom_bounds[0][0]
+
+        """
         === ORIGINAL MATLAB CODE ===
-        rng(PPARAMS.seed);
-        scatterers=rand(PPARAMS.N,3);
+        XX rng(PPARAMS.seed);
+        XX scatterers=rand(PPARAMS.N,3);
         scatterers(:,1) = scatterers(:,1) * (PPARAMS.xmax - PPARAMS.xmin) + PPARAMS.xmin;
         scatterers(:,2) = scatterers(:,2) * (PPARAMS.ymax - PPARAMS.ymin) + PPARAMS.ymin;
         scatterers(:,3) = scatterers(:,3) * (PPARAMS.zmax - PPARAMS.zmin) + PPARAMS.zmin;
-        """
-        pass
+       """
+        return scatterers
 
 
     def rigid_translate_scatterers(self):
@@ -94,13 +120,14 @@ class Phantom:
         === ORIGINAL MATLAB CODE ===
         scatterers = scatterers + (ones(PPARAMS.N,1) * PPARAMS.delta);
         """
-        pass
+        scatterers = self.create_scatterers + (np.ones((self.calc_n_scats(), 1))* self.delta_xyz)
+        return scatterers
 
-
+    """
     def save_phantom(self):
-        """save phantom for specific timestep to HDF5 format file
+        save phantom for specific timestep to HDF5 format file
 
-        """
+       
         import h5py
 
         h5out = h5py.File('{}.mat'.format(self.phantomout, self.timestep), 'a')
@@ -114,7 +141,6 @@ class Phantom:
         h5out.close()
 
 
-"""
 FD_RATIO=0.01;  % What to mutiply dyna units by (cm) to
 			    % get field units (m), here 100cm*0.01=1m
 
@@ -162,15 +188,26 @@ clear zdisp_slice
 if (strcmp(PPARAMS.sym, 'q') | strcmp(PPARAMS.sym, 'h')),
     [dX, dY, dZ] = reflect_node_coord_disp('disp', PPARAMS.sym, dX, dY, dZ);
 end
+"""
 
-% Interpolate displacement values
-sdX = interpn(X, Y, Z, dX, scatterers(:,1), scatterers(:,2), ...
-              scatterers(:,3), 'linear');
-sdY = interpn(X, Y, Z, dY, scatterers(:,1), scatterers(:,2), ...
-              scatterers(:,3), 'linear');
-sdZ = interpn(X, Y, Z, dZ, scatterers(:,1), scatterers(:,2), ...
-              scatterers(:,3), 'linear');
 
+    def my_interpn(self, x, y, z, data, pts):
+        """3D interpolation
+
+        :param x: np.ndarray vectors of x coordinates
+        :param y: np.ndarray vectors of x coordinates
+        :param z: np.ndarray vectors of x coordinates
+        :param data: np.ndarray of all data, size dim(x),dim(y),dim(z)
+        :param pts: np.ndarray of coordinates of interp locations
+        :returns: interp points
+        """
+        import numpy as np
+        from scipy.interpolate import RegularGridInterpolator
+
+        my_interp = RegularGridInterpolator((x, y, z), data)
+        return np.around(my_interp(pts), decimals=6)
+
+""""
 % Remove any NaN values from scatterer displacement matrix. NaNs will
 % occur if a scatterers is placed outside of the bounds of the nodal
 % displacement matrix that is passed in.
@@ -207,4 +244,4 @@ end
 
 
 if __name__ == "__main__":
-    main()
+    main(None)
