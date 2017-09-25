@@ -2,16 +2,26 @@ from phantom import Phantom
 import numpy as np
 
 def main():
-    p = Phantom(scat_density=1, phantom_bounds=((0, 5), (0, 5), (0, 5)))
+    """" Tests some of the functions in phantom.py
+    Tests are easy cases, not rigorous tests with intention of breaking functions
+
+            """
+    p = Phantom(scat_density=1, phantom_bounds=((0, 5), (0, 5), (0, 5)), delta_xyz = (10, 5, 100))
+    test_rigidtranslate(p)
     test_createscatterers(p)
     test_calcnscats(p)
     test_interpn(p)
     pass
 
 
+def test_rigidtranslate(p):
+    newscatterers = p.rigid_translate_scatterers()
+    assert ((newscatterers[:, 0]) < (p.phantom_bounds[0][1] +p.delta_xyz[0])).all()
+
+
 def test_createscatterers(p):
     scatterers = p.create_scatterers()
-    assert np.all(scatterers[:, 0]) < p.phantom_bounds[0][1]
+    assert ((scatterers[:, 0]) < p.phantom_bounds[0][1]).all()
 
 
 def test_calcnscats(p):
