@@ -1,5 +1,6 @@
 import numpy as np
 import h5py
+from scipy.interpolate import RegularGridInterpolator
 
 def main(timesteps):
     # for t in timesteps:
@@ -42,11 +43,17 @@ class Phantom:
         self.rng_seed = rng_seed
         self.delta_xyz = delta_xyz
 
+        self.nodeIDcoords = None
+        self.dispdat_header = None
+        self.n_scats = None
+        self.scatterers = None
+        self.translate_scatterers = None
+
         #self.load_nodeIDcoords()
         #self.read_dispdat_header()
-        #self.calc_n_scats()
-        #self.create_scatterers()
-        #self.rigid_translate_scatterers()
+        self.calc_n_scats()
+        self.create_scatterers()
+        self.rigid_translate_scatterers()
 
     def load_nodeIDcoords(self):
         """read in node IDs and x, y, z coordinates from nodes.dyn mesh file
@@ -84,7 +91,7 @@ class Phantom:
             np.abs(self.phantom_bounds[1][1] - self.phantom_bounds[1][0]) *\
             np.abs(self.phantom_bounds[2][1] - self.phantom_bounds[2][0])
 
-        return np.round(tracking_volume*self.scat_density , decimals = 6)
+        self.n_scats = np.round(tracking_volume*self.scat_density , decimals = 6)
 
     def create_scatterers(self):
         """
@@ -95,7 +102,7 @@ class Phantom:
         # Deal with None case in phantom bounds still!
 
         np.random.seed(self.rng_seed)
-        scatterers = np.random.random((self.calc_n_scats(), 3))
+        scatterers = np.random.random((self.n_scats, 3))
 
         scatterers[:, 0] = scatterers[:, 0] * (self.phantom_bounds[0][1] - self.phantom_bounds[0][0]) + \
             self.phantom_bounds[0][0]
@@ -103,18 +110,17 @@ class Phantom:
             self.phantom_bounds[0][0]
         scatterers[:, 2] = scatterers[:, 2] * (self.phantom_bounds[2][1] - self.phantom_bounds[2][0]) + \
             self.phantom_bounds[0][0]
-        return scatterers
+        self.scatterers = scatterers
 
     def rigid_translate_scatterers(self):
         """" Moves scatterers according to delta_xyz
 
                 """
+        self.translate_scatterers = np.random.random((self.n_scats, 3))
+        self.translate_scatterers[:, 0] = self.scatterers[:, 0] + (np.ones(self.n_scats) * self.delta_xyz[0])
+        self.translate_scatterers[:, 1] = self.scatterers[:, 1] + (np.ones(self.n_scats) * self.delta_xyz[1])
+        self.translate_scatterers[:, 2] = self.scatterers[:, 2] + (np.ones(self.n_scats) * self.delta_xyz[2])
 
-        scatterers = self.create_scatterers()
-        scatterers[:, 0] = scatterers[:, 0] + (np.ones((self.calc_n_scats()))* self.delta_xyz[0])
-        scatterers[:, 1] = scatterers[:, 1] + (np.ones((self.calc_n_scats())) * self.delta_xyz[1])
-        scatterers[:, 2] = scatterers[:, 2] + (np.ones((self.calc_n_scats())) * self.delta_xyz[2])
-        return scatterers
 
 
     def save_phantom(self):
@@ -136,53 +142,8 @@ class Phantom:
         h5out.close()
 
     """
-    FD_RATIO=0.01;  % What to mutiply dyna units by (cm) to
-                    % get field units (m), here 100cm*0.01=1m
-    
-    
-    if(exist(ZDISPFILE, 'file') == 0),
-        error(sprintf('%s does not exist.', ZDISPFILE));
-    else
-        zdisp_fid = fopen(ZDISPFILE, 'r');
-    end
-    
-    word_size = 4;
-    header_bytes = 3*word_size;
-    first_timestep_words = NUM_NODES*NUM_DIMS;
-    first_timestep_bytes = NUM_NODES*(NUM_DIMS)*word_size
-    timestep_bytes = NUM_NODES*(NUM_DIMS-1)*word_size
-    
-    % Get the displacement matricies
-    disp(sprintf('Extracting displacements for timestep %d...',t));
-    if (t == 1) || LEGACY_NODES
-        
-        % extract the zdisp values for the appropriate time step
-        fseek(zdisp_fid,header_bytes+first_timestep_bytes*(t-1),-1);
-        zdisp_slice = fread(zdisp_fid,first_timestep_words,'float32');
-        zdisp_slice = double(reshape(zdisp_slice,NUM_NODES,NUM_DIMS));
-        node_readout = zdisp_slice(:,1);
-    else
-        
-        % extract the zdisp values for the appropriate time step
-        fseek(zdisp_fid,header_bytes+first_timestep_bytes+timestep_bytes*(t-2),-1);
-        zdisp_slice = fread(zdisp_fid,NUM_NODES*(NUM_DIMS-1),'float32');
-        zdisp_slice = double(reshape(zdisp_slice,NUM_NODES,(NUM_DIMS-1)));
-        zdisp_slice = [node_readout zdisp_slice];
-    end
-    
-    if (strcmp(PPARAMS.sym, 'q') | strcmp(PPARAMS.sym, 'h')) & ...
-            (t == PPARAMS.TIMESTEP(1)),
-        [X, Y, Z] = reflect_node_coord_disp('coord', PPARAMS.sym, X, Y, Z);
-    end
-    
-    % Rearrange the displacement matrix into three 3D matrices corresponding to
-    % x-displacement, y-displacement, and z-displacement
-    [dX, dY, dZ] = reform_zdisp_slice(zdisp_slice, nodes);
-    clear zdisp_slice
-    
-    if (strcmp(PPARAMS.sym, 'q') | strcmp(PPARAMS.sym, 'h')),
-        [dX, dY, dZ] = reflect_node_coord_disp('disp', PPARAMS.sym, dX, dY, dZ);
-    end
+    Make [dx dy dz] matrices of the displacement of all of the nodes with the create_res_sym.py and create_z_disp from
+    fem path
     """
 
     def my_interpn(self, x, y, z, data, pts):
@@ -195,8 +156,6 @@ class Phantom:
         :param pts: np.ndarray of coordinates of interp locations
         :returns: interp points
         """
-        import numpy as np
-        from scipy.interpolate import RegularGridInterpolator
 
         my_interp = RegularGridInterpolator((x, y, z), data)
         return np.around(my_interp(pts), decimals=6)
@@ -223,17 +182,7 @@ class Phantom:
     rng(PPARAMS.seed);
     phantom.amplitude = PPARAMS.rand_scat_amp .* randn(size(scatterers,1),1);
     
-    
-    %Include evenly spaced bright scatterers (if requested)
-    if isfield(PPARAMS,'pointscatterers')
-        [xpos ypos zpos] = ndgrid(PPARAMS.pointscatterers.x, ...
-                                  PPARAMS.pointscatterers.y, ...
-                                  PPARAMS.pointscatterers.z);
-        wire_positions = [xpos(:) ypos(:) zpos(:)]; %xyz Scatterer Locations [m]
-        wire_amplitudes = PPARAMS.pointscatterers.a*ones(size(wire_positions,1),1);
-        phantom.position = [phantom.position; wire_positions];
-        phantom.amplitude = [phantom.amplitude; wire_amplitudes];
-    end
+
     """
 
 

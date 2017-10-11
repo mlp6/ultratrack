@@ -15,17 +15,17 @@ def main():
 
 
 def test_rigidtranslate(p):
-    newscatterers = p.rigid_translate_scatterers()
+    newscatterers = p.translate_scatterers
     assert ((newscatterers[:, 0]) < (p.phantom_bounds[0][1] +p.delta_xyz[0])).all()
 
 
 def test_createscatterers(p):
-    scatterers = p.create_scatterers()
+    scatterers = p.scatterers
     assert ((scatterers[:, 0]) < p.phantom_bounds[0][1]).all()
 
 
 def test_calcnscats(p):
-    assert p.calc_n_scats() == 125
+    assert p.n_scats == 125
 
 
 def test_interpn(p):
