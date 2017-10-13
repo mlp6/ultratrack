@@ -5,7 +5,6 @@ from scipy.interpolate import RegularGridInterpolator
 def main(timesteps):
     # for t in timesteps:
     p = Phantom()
-    p.calc_n_scats()
     pass
 
 
@@ -49,8 +48,8 @@ class Phantom:
         self.scatterers = None
         self.translate_scatterers = None
 
-        #self.load_nodeIDcoords()
-        #self.read_dispdat_header()
+        self.load_nodeIDcoords()
+        self.read_dispdat_header()
         self.calc_n_scats()
         self.create_scatterers()
         self.rigid_translate_scatterers()
@@ -74,6 +73,7 @@ class Phantom:
             num_dims
             num_timesteps
         """
+
         try:
             from fem.post.create_res_sim_mat import read_header
         except ImportError:
@@ -85,13 +85,28 @@ class Phantom:
         """" N (int) - number of scatterers in the model volume
 
         """
-        # Deal with None case in phantom bounds still!
+        i = 0
+        minmaxs = [min(self.nodeIDcoords['x']), max(self.nodeIDcoords['x']),
+                   min(self.nodeIDcoords['y']), max(self.nodeIDcoords['y']),
+                   min(self.nodeIDcoords['z']), max(self.nodeIDcoords['z'])]
+        lims = list()
 
-        tracking_volume = np.abs(self.phantom_bounds[0][1] - self.phantom_bounds[0][0]) *\
-            np.abs(self.phantom_bounds[1][1] - self.phantom_bounds[1][0]) *\
-            np.abs(self.phantom_bounds[2][1] - self.phantom_bounds[2][0])
+        # Deal with None cases
+        for item in self.phantom_bounds:
+            for num in item:
+                if num is None:
+                    lims.append(minmaxs[i])
+                else:
+                    lims.append(num)
+                i = i + 1
 
-        self.n_scats = np.round(tracking_volume*self.scat_density , decimals = 6)
+        tracking_volume = np.abs(lims[1] - lims[0]) *\
+            np.abs(lims[3] - lims[2]) *\
+            np.abs(lims[5] - lims[4])
+
+        self.minmaxs = minmaxs
+        self.lims = lims
+        self.n_scats = int(np.round(tracking_volume*self.scat_density , decimals = 6))
 
     def create_scatterers(self):
         """
@@ -99,17 +114,14 @@ class Phantom:
         Using the explicit RNG seed ensures identical scatterer location in subsequent runs if needed.
 
         """
-        # Deal with None case in phantom bounds still!
 
         np.random.seed(self.rng_seed)
         scatterers = np.random.random((self.n_scats, 3))
+        lims = self.lims
 
-        scatterers[:, 0] = scatterers[:, 0] * (self.phantom_bounds[0][1] - self.phantom_bounds[0][0]) + \
-            self.phantom_bounds[0][0]
-        scatterers[:, 1] = scatterers[:, 1] * (self.phantom_bounds[1][1] - self.phantom_bounds[1][0]) + \
-            self.phantom_bounds[0][0]
-        scatterers[:, 2] = scatterers[:, 2] * (self.phantom_bounds[2][1] - self.phantom_bounds[2][0]) + \
-            self.phantom_bounds[0][0]
+        scatterers[:, 0] = scatterers[:, 0] * (lims[1] - lims[0]) + lims[0]
+        scatterers[:, 1] = scatterers[:, 1] * (lims[3] - lims[2]) + lims[2]
+        scatterers[:, 2] = scatterers[:, 2] * (lims[5] - lims[4]) + lims[4]
         self.scatterers = scatterers
 
     def rigid_translate_scatterers(self):
@@ -120,8 +132,6 @@ class Phantom:
         self.translate_scatterers[:, 0] = self.scatterers[:, 0] + (np.ones(self.n_scats) * self.delta_xyz[0])
         self.translate_scatterers[:, 1] = self.scatterers[:, 1] + (np.ones(self.n_scats) * self.delta_xyz[1])
         self.translate_scatterers[:, 2] = self.scatterers[:, 2] + (np.ones(self.n_scats) * self.delta_xyz[2])
-
-
 
     def save_phantom(self):
         """save phantom for specific timestep to HDF5 format file
@@ -141,7 +151,15 @@ class Phantom:
 
         h5out.close()
 
+    def make_dispdata(self):
+        try:
+            from fem.post.create_res_sim_mat import create_zdisp
+        except ImportError:
+            print('ERROR: Problem importing fem.post.create_res_sim_mat.read_header; check PYTHONPATH.')
+
+        #? create_zdisp(self.nodeIDcoords['id'], )
     """
+    
     Make [dx dy dz] matrices of the displacement of all of the nodes with the create_res_sym.py and create_z_disp from
     fem path
     """
