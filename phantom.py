@@ -2,6 +2,7 @@ import numpy as np
 import h5py
 from scipy.interpolate import RegularGridInterpolator
 
+
 def main(timesteps):
     # for t in timesteps:
     p = Phantom()
@@ -13,7 +14,7 @@ class Phantom:
 
     The FEM models are traditionally run with cgs units, with the following coordinate assumption:
         X - elevation dimension (0 -> negative for quarter symmetry)
-        Y - lateral dimnenson (0 -> positive for quarter symmetry)
+        Y - lateral dimension (0 -> positive for quarter symmetry)
         Z - depth (0 -> negative, transducer at 0)
 
     This coordinate system differs from that used for Field II!!  This is accounted for in the downstream code that
@@ -28,11 +29,12 @@ class Phantom:
     :param timestep: timestep (single int) to create (based on FEM timesteps; keep as None to use all timesteps)
     :param rng_seed: RNG seed (to create the "same" random distributions for iterating over track parameters)
     :param delta_xyz: rigid x, y, z translation to apply to scatterers for the specified timestep
+    :param nodout: nodout file
     """
 
     def __init__(self, nodesdynfile="nodes.dyn", dispdatfile="disp.dat.xz", phantomout="phantoms",
                  scat_density=20, phantom_bounds=((None, None), (None, None), (None, None)), timestep=1,
-                 rng_seed=0, delta_xyz=(0, 0, 0)):
+                 rng_seed=0, delta_xyz=(0, 0, 0), nodout="nodout"):
         self.nodesdynfile = nodesdynfile
         self.dispdatfile = dispdatfile
         self.phantomout = phantomout
@@ -41,18 +43,26 @@ class Phantom:
         self.timestep = timestep
         self.rng_seed = rng_seed
         self.delta_xyz = delta_xyz
+        self.nodout = nodout
 
         self.nodeIDcoords = None
         self.dispdat_header = None
+        self.minmaxs = None
+        self.lims = None
         self.n_scats = None
         self.scatterers = None
         self.translate_scatterers = None
+        self.dispdat = None
+        self.sdispdat = None
 
         self.load_nodeIDcoords()
         self.read_dispdat_header()
         self.calc_n_scats()
         self.create_scatterers()
         self.rigid_translate_scatterers()
+        self.make_dispdata()
+        self.make_interp()
+
 
     def load_nodeIDcoords(self):
         """read in node IDs and x, y, z coordinates from nodes.dyn mesh file
@@ -109,12 +119,10 @@ class Phantom:
         self.n_scats = int(np.round(tracking_volume*self.scat_density , decimals = 6))
 
     def create_scatterers(self):
-        """
-        create scatterrers within phantom_bounds using explicitly-seeded RNG
+        """create scatterrers within phantom_bounds using explicitly-seeded RNG
         Using the explicit RNG seed ensures identical scatterer location in subsequent runs if needed.
 
         """
-
         np.random.seed(self.rng_seed)
         scatterers = np.random.random((self.n_scats, 3))
         lims = self.lims
@@ -127,7 +135,7 @@ class Phantom:
     def rigid_translate_scatterers(self):
         """" Moves scatterers according to delta_xyz
 
-                """
+        """
         self.translate_scatterers = np.random.random((self.n_scats, 3))
         self.translate_scatterers[:, 0] = self.scatterers[:, 0] + (np.ones(self.n_scats) * self.delta_xyz[0])
         self.translate_scatterers[:, 1] = self.scatterers[:, 1] + (np.ones(self.n_scats) * self.delta_xyz[1])
@@ -152,56 +160,45 @@ class Phantom:
         h5out.close()
 
     def make_dispdata(self):
+        """create displacement data in [dx, dy, dz] format
+
+        """
         try:
-            from fem.post.create_res_sim_mat import create_zdisp
+            from fem.post.create_disp_dat import parse_line
         except ImportError:
-            print('ERROR: Problem importing fem.post.create_res_sim_mat.read_header; check PYTHONPATH.')
+            print('ERROR: Problem importing fem.post.create_disp_dat.parse_line; check PYTHONPATH.')
 
-        #? create_zdisp(self.nodeIDcoords['id'], )
-    """
-    
-    Make [dx dy dz] matrices of the displacement of all of the nodes with the create_res_sym.py and create_z_disp from
-    fem path
-    """
+        nodout = open(self.nodout, "r")
+        n = nodout.readlines()
+        raw_data = []
+        for i in range(8, 11):
+            line = n[i]
+            raw_data.append(parse_line(line))
 
-    def my_interpn(self, x, y, z, data, pts):
+        dispdata_complete = []
+
+        disp_iter = iter(raw_data)
+        for node in self.nodeIDcoords:
+            if any(item[0] for item in raw_data == node['id']):
+                thisdisp = next(disp_iter)
+                dispdata_complete.append([thisdisp[1], thisdisp[2], thisdisp[3]])
+            else:
+                dispdata_complete.append([0, 0, 0])
+
+        self.dispdat = dispdata_complete
+
+    def make_interp(self):
         """3D interpolation
 
-        :param x: np.ndarray vectors of x coordinates
-        :param y: np.ndarray vectors of x coordinates
-        :param z: np.ndarray vectors of x coordinates
-        :param data: np.ndarray of all data, size dim(x),dim(y),dim(z)
-        :param pts: np.ndarray of coordinates of interp locations
-        :returns: interp points
         """
 
-        my_interp = RegularGridInterpolator((x, y, z), data)
-        return np.around(my_interp(pts), decimals=6)
+        xinterp = np.interp([item[0] for item in self.scatterers], self.nodeIDcoords['x'], [item[0] for item in self.dispdat])
+        yinterp = np.interp([item[1] for item in self.scatterers], self.nodeIDcoords['y'], [item[1] for item in self.dispdat])
+        zinterp = np.interp([item[2] for item in self.scatterers], self.nodeIDcoords['x'], [item[2] for item in self.dispdat])
 
-    """"
-    % Remove any NaN values from scatterer displacement matrix. NaNs will
-    % occur if a scatterers is placed outside of the bounds of the nodal
-    % displacement matrix that is passed in.
-    sdX(isnan(sdX)) = 0;
-    sdY(isnan(sdY)) = 0;
-    sdZ(isnan(sdZ)) = 0;
-    
-    % Add displacements to initial scatterer positions and insert the values in
-    % the phantom structure
-    phantom.position = (scatterers + [sdX sdY sdZ]) * FD_RATIO;
-    
-    % Reverse z dimension and swap x and y to go from dyna-land to field-world
-    phantom.position(:,3) = phantom.position(:,3) * -1;
-    phantom.position = phantom.position(:, [2 1 3]);
-    
-    % Insert amplitudes for scatterers
-    % Have uniform amplitude, but can set to something other than 1 (e.g., 0,
-    % to only have point scatteres (below))
-    rng(PPARAMS.seed);
-    phantom.amplitude = PPARAMS.rand_scat_amp .* randn(size(scatterers,1),1);
-    
-
-    """
+        self.sdispdat = []
+        for i in range(len(xinterp)):
+            self.sdispdat.append([xinterp[i], yinterp[i], zinterp[i]])
 
 
 if __name__ == "__main__":
