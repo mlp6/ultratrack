@@ -171,7 +171,7 @@ class Phantom:
         nodout = open(self.nodout, "r")
         n = nodout.readlines()
         raw_data = []
-        for i in range(8, 11):
+        for i in range(8, 18):
             line = n[i]
             raw_data.append(parse_line(line))
 
