@@ -1,95 +1,51 @@
-from phantom import Phantom
+"""test_phantom.py
+"""
+
+from ultratrack.phantom import Phantom
 import numpy as np
+import os
 
-def main():
-    """" Tests some of the functions in phantom.py
-    Tests are easy cases, not rigorous tests with intention of breaking functions
+myPath = os.path.dirname(os.path.abspath(__file__))
+nodefile = '%s/nodes2.dyn' % myPath
+dispfile = '%s/disp.dat.xz' % myPath
+nodoutfile = '%s/nodout2' % myPath
 
-            """
-    p = Phantom(scat_density=1, phantom_bounds=((0, 5), (0, 5), (0, 5)), delta_xyz = (10, 5, 100))
-    test_rigidtranslate(p)
-    test_createscatterers(p)
-    test_calcnscats(p)
-    test_interpn(p)
+# Make disp.dat.xz file
+from fem.post.create_disp_dat import create_dat, parse_line
+create_dat(dispout="disp.dat.xz", nodout="nodout")
+
+# Make instance of Phantom class
+p = Phantom(scat_density=10,nodesdynfile=nodefile, dispdatfile = dispfile, delta_xyz = (10, 5, 100), nodout= nodoutfile)
+
+def test_mytest():
     pass
 
-
-def test_rigidtranslate(p):
-    newscatterers = p.translate_scatterers
-    assert ((newscatterers[:, 0]) < (p.phantom_bounds[0][1] +p.delta_xyz[0])).all()
-
-
-def test_createscatterers(p):
-    scatterers = p.scatterers
-    assert ((scatterers[:, 0]) < p.phantom_bounds[0][1]).all()
+def test_load_nodeIDcoords():
+    assert p.nodeIDcoords != None
+    assert len(p.nodeIDcoords['x']) == len(p.nodeIDcoords['y'])
+    assert p.nodeIDcoords[0][1] == -1
 
 
-def test_calcnscats(p):
-    assert p.n_scats == 125
+def test_read_dispdat_header():
+    assert p.dispdat_header != None
 
 
-def test_interpn(p):
-    test_zerotest(p)
-    test_onestest(p)
-    test_lineartest(p)
+def test_calc_n_scats():
+    assert p.n_scats == 10
 
 
-def f1(x, y, z):
-    # Zero matrix data
-    return 0*x + 0*y + 0*z
+def test_create_scatterers():
+    assert len(p.scatterers) != None
 
 
-def f2(x, y, z):
-    # Ones matrix data
-    return 0*x + 0*y + 0*z + 1
+def test_rigid_translate_scatterers():
+    assert len(p.translate_scatterers) != None
+    assert p.translate_scatterers[0][0] == p.scatterers[0][0] + p.delta_xyz[0]
 
 
-def f3(x, y, z):
-    # Linear data
-    return x + y + z
+def test_make_dispdata():
+    assert len(p.dispdat) != None
 
 
-def test_zerotest(p):
-    x = np.linspace(-2, 2, 5)
-    y = np.linspace(-2, 2, 5)
-    z = np.linspace(-2, 2, 5)
-
-    data = f1(*np.meshgrid(x, y, z, indexing='ij', sparse=True))
-    pts = np.array([[1, 0, 0], [0.5, 0.5, 0.5], [-1.5, 0.3, 1.7]])
-
-    # print(my_interpn(x, y, z, data, pts))
-    assert p.my_interpn(x, y, z, data, pts)[0] == 0
-    assert p.my_interpn(x, y, z, data, pts)[1] == 0
-    assert p.my_interpn(x, y, z, data, pts)[2] == 0
-
-
-def test_onestest(p):
-    x = np.linspace(-2, 2, 5)
-    y = np.linspace(-2, 2, 5)
-    z = np.linspace(-2, 2, 5)
-
-    data = f2(*np.meshgrid(x, y, z, indexing='ij', sparse=True))
-    pts = np.array([[1, 0, 0], [0.5, 0.5, 0.5], [-1.5, 0.3, 1.7]])
-
-    # print(my_interpn(x, y, z, data, pts))
-    assert p.my_interpn(x, y, z, data, pts)[0] == 1
-    assert p.my_interpn(x, y, z, data, pts)[1] == 1
-    assert p.my_interpn(x, y, z, data, pts)[2] == 1
-
-
-def test_lineartest(p):
-    x = np.linspace(-2, 100, 5)
-    y = np.linspace(-2, 2, 5)
-    z = np.linspace(-2, 2, 5)
-
-    data = f3(*np.meshgrid(x, y, z, indexing='ij', sparse=True))
-    pts = np.array([[1, 0, 0], [0.5, 0.5, 0.5], [-1.5, 0.3, 1.7]])
-
-    # print(my_interpn(x, y, z, data, pts))
-    assert p.my_interpn(x, y, z, data, pts)[0] == 1
-    assert p.my_interpn(x, y, z, data, pts)[1] == 1.5
-    assert p.my_interpn(x, y, z, data, pts)[2] == 0.5
-
-
-if __name__ == "__main__":
-    main()
+def test_make_interp():
+    assert len(p.sdispdat) != None
