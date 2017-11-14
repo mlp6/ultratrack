@@ -17,10 +17,6 @@ create_dat(dispout="disp.dat.xz", nodout="nodout")
 # Make instance of Phantom class
 p = Phantom(scat_density=10,nodesdynfile=nodefile, dispdatfile = dispfile, delta_xyz = (10, 5, 100), nodout= nodoutfile)
 
-def test_mytest():
-    print(p.sdispdat)
-    pass
-
 def test_load_nodeIDcoords():
     assert p.nodeIDcoords != None
     assert len(p.nodeIDcoords['x']) == len(p.nodeIDcoords['y'])
