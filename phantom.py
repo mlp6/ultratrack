@@ -1,8 +1,3 @@
-import numpy as np
-import h5py
-from scipy.interpolate import RegularGridInterpolator
-
-
 def main(timesteps):
     # for t in timesteps:
     p = Phantom()
@@ -95,6 +90,8 @@ class Phantom:
         """" N (int) - number of scatterers in the model volume
 
         """
+        import numpy as np
+
         i = 0
         minmaxs = [min(self.nodeIDcoords['x']), max(self.nodeIDcoords['x']),
                    min(self.nodeIDcoords['y']), max(self.nodeIDcoords['y']),
@@ -123,19 +120,22 @@ class Phantom:
         Using the explicit RNG seed ensures identical scatterer location in subsequent runs if needed.
 
         """
+        import numpy as np
+
         np.random.seed(self.rng_seed)
         scatterers = np.random.random((self.n_scats, 3))
-        lims = self.lims
 
-        scatterers[:, 0] = scatterers[:, 0] * (lims[1] - lims[0]) + lims[0]
-        scatterers[:, 1] = scatterers[:, 1] * (lims[3] - lims[2]) + lims[2]
-        scatterers[:, 2] = scatterers[:, 2] * (lims[5] - lims[4]) + lims[4]
+        scatterers[:, 0] = scatterers[:, 0] * (self.lims[1] - self.lims[0]) + self.lims[0]
+        scatterers[:, 1] = scatterers[:, 1] * (self.lims[3] - self.lims[2]) + self.lims[2]
+        scatterers[:, 2] = scatterers[:, 2] * (self.lims[5] - self.lims[4]) + self.lims[4]
         self.scatterers = scatterers
 
     def rigid_translate_scatterers(self):
         """" Moves scatterers according to delta_xyz
 
         """
+        import numpy as np
+
         self.translate_scatterers = np.random.random((self.n_scats, 3))
         self.translate_scatterers[:, 0] = self.scatterers[:, 0] + (np.ones(self.n_scats) * self.delta_xyz[0])
         self.translate_scatterers[:, 1] = self.scatterers[:, 1] + (np.ones(self.n_scats) * self.delta_xyz[1])
@@ -145,6 +145,7 @@ class Phantom:
         """save phantom for specific timestep to HDF5 format file
 
         """
+        import h5py
 
         h5out = h5py.File('{}.mat'.format(self.phantomout, self.timestep), 'a')
         h5out.attrs()
@@ -193,14 +194,13 @@ class Phantom:
         """3D interpolation
 
         """
+        import numpy as np
 
         xinterp = np.interp([item[0] for item in self.scatterers], self.nodeIDcoords['x'], [item[0] for item in self.dispdat])
         yinterp = np.interp([item[1] for item in self.scatterers], self.nodeIDcoords['y'], [item[1] for item in self.dispdat])
         zinterp = np.interp([item[2] for item in self.scatterers], self.nodeIDcoords['x'], [item[2] for item in self.dispdat])
 
-        self.sdispdat = []
-        for i in range(len(xinterp)):
-            self.sdispdat.append([xinterp[i], yinterp[i], zinterp[i]])
+        self.sdispdat = np.array([xinterp, yinterp, zinterp]).T
 
 
 if __name__ == "__main__":
