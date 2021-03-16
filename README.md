@@ -1,4 +1,5 @@
 ![PythonBadge](https://github.com/mlp6/ultratrack/actions/workflows/python-package.yml/badge.svg)
+![MatlabBadge](https://github.com/mlp6/ultratrack/actions/workflows/matlab.yml/badge.svg)
 
 Ultrasonic Tracking Simulation Tools
 ====================================
