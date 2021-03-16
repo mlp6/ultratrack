@@ -1,3 +1,5 @@
+![PythonBadge](https://github.com/mlp6/ultratrack/actions/workflows/python-package.yml/badge.svg)
+
 Ultrasonic Tracking Simulation Tools
 ====================================
 [Field II](http://field-ii.dk) ultrasonic displacement tracking code using FEM
